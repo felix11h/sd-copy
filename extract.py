@@ -1,18 +1,12 @@
-import json
+
 from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
 from typing import Sequence
 
+import click
 from exiftool import ExifTool
-#
-# with ExifTool() as et:
-#     j=et.get_metadata("data/DSCF0023.MOV")
-#     g=et.get_metadata("data/DSCF0021.JPG")
-#
-# print(json.dumps(j, indent=2))
-# print(json.dumps(g, indent=2))
 
 
 class Camera(Enum):
@@ -91,12 +85,20 @@ def get_target_path(source_path: Path, target_folder: Path) -> Path:
     )
 
 
+@click.command()
+@click.argument('src', type=click.Path(exists=True, path_type=Path))
+@click.argument('dst', type=click.Path(exists=True, path_type=Path))
+@click.option('--dry-run', '-n', default=False, is_flag=True)
+def main(src: Path, dst: Path, dry_run: bool):
+    print(type(src))
+    print(dry_run)
 
-# def main()
 
 
 
-print(get_target_path(source_path=Path("data/DSCF0023.MOV"), target_folder=Path("hello/")))
-print(get_target_path(source_path=Path("data/DSCF0021.JPG"), target_folder=Path("world/")))
 
+# print(get_target_path(source_path=Path("data/DSCF0023.MOV"), target_folder=Path("hello/")))
+# print(get_target_path(source_path=Path("data/DSCF0021.JPG"), target_folder=Path("world/")))
 
+if __name__ == "__main__":
+    main()

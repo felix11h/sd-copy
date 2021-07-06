@@ -1,4 +1,3 @@
-
 from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
@@ -90,15 +89,11 @@ def get_target_path(source_path: Path, target_folder: Path) -> Path:
 @click.argument('dst', type=click.Path(exists=True, path_type=Path))
 @click.option('--dry-run', '-n', default=False, is_flag=True)
 def main(src: Path, dst: Path, dry_run: bool):
-    print(type(src))
+    print(type(src), dst)
     print(dry_run)
+    print("dry")
+    print("foo")
 
-
-
-
-
-# print(get_target_path(source_path=Path("data/DSCF0023.MOV"), target_folder=Path("hello/")))
-# print(get_target_path(source_path=Path("data/DSCF0021.JPG"), target_folder=Path("world/")))
 
 if __name__ == "__main__":
     main()

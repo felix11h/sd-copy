@@ -1,8 +1,8 @@
 [tool.poetry]
-name = "sd-copy"
+name = "simple-sd-copy"
 version = "0.1.0"
 description = ""
-authors = ["Your Name <you@example.com>"]
+authors = ["Felix Hoffmann <felix11h@github.nomail>"]
 
 [tool.poetry.dependencies]
 python = "^3.9"
@@ -10,6 +10,9 @@ PyExifTool = "^0.4.9"
 click = "^8.0.1"
 
 [tool.poetry.dev-dependencies]
+
+[tool.poetry.scripts]
+simple-sd-copy = 'simple_sd_copy.main:main'
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

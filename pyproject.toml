@@ -10,6 +10,8 @@ PyExifTool = "^0.4.9"
 click = "^8.0.1"
 
 [tool.poetry.dev-dependencies]
+pytest = "^6.2.4"
+coverage = "^5.5"
 
 [tool.poetry.scripts]
 simple-sd-copy = 'simple_sd_copy.main:main'

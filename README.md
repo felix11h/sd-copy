@@ -18,7 +18,7 @@ simple-sd-copy [source path] [output path]
 
 ### Installation
 
-In the root directory of this project
+First install `exiftool` ([exiftool.org](https://exiftool.org/install.html#Unix)). Then, in the root directory of this project
 ```shell
 pip install .
 ```

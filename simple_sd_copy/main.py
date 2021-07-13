@@ -1,3 +1,4 @@
+import os
 import shutil
 from dataclasses import dataclass, asdict
 from datetime import datetime, timedelta
@@ -146,7 +147,7 @@ def update_exif_data(file_path: Path, rectified_modify_date: datetime):
 
 
 def update_file_modify_date(file_path: Path, rectified_modify_date: datetime):
-    pass
+    os.utime(path=file_path, times=(rectified_modify_date.timestamp(), rectified_modify_date.timestamp()))
 
 
 def remove_source_file(source_path: Path):
@@ -170,7 +171,7 @@ def main(src: Path, dst: Path, dry_run: bool, keep: bool):
         if not dry_run:
             copy_media_to_target(source_path=media_file, target_path=target_path)
             update_exif_data(file_path=media_file, rectified_modify_date=rectified_date)
-            update_file_modify_date(file_path=media_file, rectified_modify_date=rectified_date)
+            update_file_modify_date(file_path=target_path, rectified_modify_date=rectified_date)
             if not keep:
                 remove_source_file(source_path=media_file)
 

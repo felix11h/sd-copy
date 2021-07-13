@@ -5,3 +5,4 @@
 * correctly set metadata?
 * use pydantic for dataclass type validation?
 * use mypy?
+* setup dependabot

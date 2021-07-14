@@ -14,6 +14,10 @@ class UnexpectedDataError(ValueError):
     """Raise when input data presents a case not yet handled."""
 
 
+class MissingDependencyError(RuntimeError):
+    """Raise when depeendencies are missing"""
+
+
 class Camera(Enum):
     xt3 = "x-t3"
     dji_osmo_action = "dji-oa"
@@ -47,6 +51,11 @@ class Video(BaseMedium):
     exif_modify_date: datetime
     resolution: str
     fps: str
+
+
+def check_if_exiftool_installed():
+    if not shutil.which("exiftool"):
+        raise MissingDependencyError("Exiftool not found, please install")
 
 
 def get_datetime_from_str(timestamp: str) -> datetime:
@@ -160,6 +169,8 @@ def remove_source_file(source_path: Path):
 @click.option('--dry-run', '-n', default=False, is_flag=True)
 @click.option('--keep', '-k', default=False, is_flag=True)
 def main(src: Path, dst: Path, dry_run: bool, keep: bool):
+
+    check_if_exiftool_installed()
 
     for media_file in src.rglob("*"):
 

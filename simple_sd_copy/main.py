@@ -111,7 +111,7 @@ def get_image_or_video(media_file: Path) -> Union[Image, Video]:
 def get_rectified_modify_date(metadata: Union[Image, Video]) -> datetime:
     assert metadata.exif_modify_date == metadata.exif_create_date
     return {
-        Camera.xt3: metadata.exif_modify_date,
+        Camera.xt3: metadata.file_modify_date - timedelta(hours=1),
         Camera.dji_osmo_action: metadata.exif_modify_date + timedelta(hours=2)
     }[metadata.camera]
 

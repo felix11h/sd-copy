@@ -1,0 +1,3 @@
+[submodule "dcim"]
+	path = dcim
+	url = ../simple-sd-copy-data.git

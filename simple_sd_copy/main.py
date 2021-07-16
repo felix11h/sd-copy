@@ -3,8 +3,9 @@ import shutil
 from dataclasses import dataclass, asdict
 from datetime import datetime, timedelta
 from enum import Enum
+from operator import attrgetter
 from pathlib import Path
-from typing import Sequence, Union
+from typing import Sequence, Union, Callable, Optional
 
 import click
 from exiftool import ExifTool
@@ -15,7 +16,7 @@ class UnexpectedDataError(ValueError):
 
 
 class MissingDependencyError(RuntimeError):
-    """Raise when depeendencies are missing"""
+    """Raise when dependencies are missing"""
 
 
 class Camera(Enum):
@@ -51,6 +52,14 @@ class Video(BaseMedium):
     exif_modify_date: datetime
     resolution: str
     fps: str
+
+
+@dataclass
+class DCIMTransfer:
+    source_path: Path
+    metadata: Union[Image, Video]
+    rectified_modify_date: datetime
+    target_path: Path
 
 
 def check_if_exiftool_installed():
@@ -163,6 +172,43 @@ def remove_source_file(source_path: Path):
     pass
 
 
+def get_dcim_transfer_object(media_file: Path, destination: Path) -> DCIMTransfer:
+    metadata = get_image_or_video(media_file=media_file)
+    rectified_modify_date = get_rectified_modify_date(metadata=metadata)
+    return DCIMTransfer(
+        source_path=media_file,
+        metadata=metadata,
+        rectified_modify_date=rectified_modify_date,
+        target_path=get_target_path(destination=destination, metadata=metadata, rectified_date=rectified_modify_date),
+    )
+
+
+def get_dcim_transfers(source_path: Path, destination_path: Path) -> Sequence[DCIMTransfer]:
+    return tuple(
+        get_dcim_transfer_object(media_file=media_file, destination=destination_path)
+        for media_file in source_path.rglob("*")
+    )
+
+
+def get_sorted_transfers(
+        dcim_transfers: Sequence[DCIMTransfer],
+        sort_key: Callable,
+        exclude: Optional[Extension] = None,
+) -> Sequence[DCIMTransfer]:
+    return tuple(
+        sorted(
+            filter(lambda obj: obj.metadata.extension != exclude, dcim_transfers) if exclude else dcim_transfers,
+            key=sort_key,
+        )
+    )
+
+
+def assert_target_sorting_matches_source(dcim_transfers: Sequence[DCIMTransfer], exclude: Optional[Extension]):
+    sorted_by_source = get_sorted_transfers(dcim_transfers, sort_key=attrgetter("source_path"), exclude=exclude)
+    sorted_by_target = get_sorted_transfers(dcim_transfers, sort_key=attrgetter("target_path"), exclude=exclude)
+    assert sorted_by_source == sorted_by_target
+
+
 @click.command()
 @click.argument('src', type=click.Path(exists=True, path_type=Path))
 @click.argument('dst', type=click.Path(exists=True, path_type=Path))
@@ -171,23 +217,38 @@ def remove_source_file(source_path: Path):
 def main(src: Path, dst: Path, dry_run: bool, keep: bool):
 
     check_if_exiftool_installed()
+    dcim_transfers = get_dcim_transfers(source_path=src, destination_path=dst)
 
-    for media_file in src.rglob("*"):
+    # Assert that copied files maintain the sorting of the source files. Either raw or compressed images need to
+    # excluded, as cameras can create them at the same time using the same filename. Dependening on metadata included
+    # in the target filename, this can lead to changes in the sorting:
+    #   [source path]
+    #   ├── DSCF0231.JPG
+    #   ├── DSCF0231.RAF
+    # becomes
+    #   [target path]
+    #   ├── 20210708-174028_x-t3_DSCF0231_4416x2944.raf
+    #   ├── 20210708-174028_x-t3_DSCF0231_6240x4160.jpg
+    assert_target_sorting_matches_source(dcim_transfers=dcim_transfers, exclude=Extension.jpg)
+    assert_target_sorting_matches_source(dcim_transfers=dcim_transfers, exclude=Extension.raf)
 
-        metadata = get_image_or_video(media_file=media_file)
-        rectified_date = get_rectified_modify_date(metadata=metadata)
-
-        target_path = get_target_path(destination=dst, metadata=metadata, rectified_date=rectified_date)
+    for dcim_transfer in dcim_transfers:
 
         if not dry_run:
-            copy_media_to_target(source_path=media_file, target_path=target_path)
-            update_exif_data(file_path=media_file, rectified_modify_date=rectified_date)
-            update_file_modify_date(file_path=target_path, rectified_modify_date=rectified_date)
+            copy_media_to_target(source_path=dcim_transfer.source_path, target_path=dcim_transfer.target_path)
+            update_exif_data(
+                file_path=dcim_transfer.target_path,
+                rectified_modify_date=dcim_transfer.rectified_modify_date,
+            )
+            update_file_modify_date(
+                file_path=dcim_transfer.target_path,
+                rectified_modify_date=dcim_transfer.rectified_modify_date,
+            )
             if not keep:
-                remove_source_file(source_path=media_file)
+                remove_source_file(source_path=dcim_transfer.source_path)
 
         else:
-            print(f"{media_file} --> {target_path}")
+            print(f"{dcim_transfer.source_path} --> {dcim_transfer.target_path}")
 
 
 if __name__ == "__main__":

@@ -1,11 +1,12 @@
-from dataclasses import dataclass, asdict
+from dataclasses import asdict, dataclass
 from datetime import datetime, timedelta
 from enum import Enum
 from operator import attrgetter
 from pathlib import Path
-from typing import Sequence, Union, Callable, Optional
+from typing import Callable, Optional, Sequence, Union
 
 from exiftool import ExifTool
+
 from simple_sd_copy.utils import UnexpectedDataError, get_datetime_from_str
 
 

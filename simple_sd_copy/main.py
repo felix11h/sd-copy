@@ -5,7 +5,7 @@ from pathlib import Path
 
 import click
 
-from simple_sd_copy.dcim_transfer import get_dcim_transfers, assert_target_sorting_matches_source, Extension
+from simple_sd_copy.dcim_transfer import Extension, assert_target_sorting_matches_source, get_dcim_transfers
 from simple_sd_copy.utils import check_if_exiftool_installed
 
 

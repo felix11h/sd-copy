@@ -27,10 +27,10 @@ def remove_source_file(source_path: Path):
 
 
 @click.command()
-@click.argument('src', type=click.Path(exists=True, path_type=Path))
-@click.argument('dst', type=click.Path(exists=True, path_type=Path))
-@click.option('--dry-run', '-n', default=False, is_flag=True)
-@click.option('--keep', '-k', default=False, is_flag=True)
+@click.argument("src", type=click.Path(exists=True, path_type=Path))
+@click.argument("dst", type=click.Path(exists=True, path_type=Path))
+@click.option("--dry-run", "-n", default=False, is_flag=True)
+@click.option("--keep", "-k", default=False, is_flag=True)
 def main(src: Path, dst: Path, dry_run: bool, keep: bool):
 
     check_if_exiftool_installed()

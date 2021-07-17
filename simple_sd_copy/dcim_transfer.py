@@ -102,37 +102,37 @@ def get_rectified_modify_date(metadata: Union[Image, Video]) -> datetime:
     assert metadata.exif_modify_date == metadata.exif_create_date
     return {
         Camera.xt3: metadata.file_modify_date - timedelta(hours=1),
-        Camera.dji_osmo_action: metadata.exif_modify_date + timedelta(hours=2)
+        Camera.dji_osmo_action: metadata.exif_modify_date + timedelta(hours=2),
     }[metadata.camera]
 
 
 def get_target_path(destination: Path, metadata: Union[Image, Video], rectified_date: datetime) -> Path:
-
     def get_video_file_name_additions(video: Video) -> Sequence[str]:
-        return (
-            f"{video.resolution}-{video.fps}",
-        )
+        return (f"{video.resolution}-{video.fps}",)
 
     def get_image_file_name_additions(image: Image) -> Sequence[str]:
-        return (
-            image.resolution,
-        )
+        return (image.resolution,)
 
-    return destination / datetime.strftime(rectified_date, '%Y-%m-%d') / Path(
-        "_".join(
-            (
-                datetime.strftime(rectified_date, '%Y%m%d-%H%M%S'),
-                metadata.camera.value,
-                metadata.file_name,
-                *(
-                    {
-                        "image/jpeg": get_image_file_name_additions,
-                        "image/x-fujifilm-raf": get_image_file_name_additions,
-                        "video/quicktime": get_video_file_name_additions,
-                    }[metadata.mime_type](metadata)
+    return (
+        destination
+        / datetime.strftime(rectified_date, "%Y-%m-%d")
+        / Path(
+            "_".join(
+                (
+                    datetime.strftime(rectified_date, "%Y%m%d-%H%M%S"),
+                    metadata.camera.value,
+                    metadata.file_name,
+                    *(
+                        {
+                            "image/jpeg": get_image_file_name_additions,
+                            "image/x-fujifilm-raf": get_image_file_name_additions,
+                            "video/quicktime": get_video_file_name_additions,
+                        }[metadata.mime_type](metadata)
+                    ),
                 ),
-            ),
-        ) + metadata.extension.value,
+            )
+            + metadata.extension.value,
+        )
     )
 
 
@@ -155,9 +155,9 @@ def get_dcim_transfers(source_path: Path, destination_path: Path) -> Sequence[DC
 
 
 def get_sorted_transfers(
-        dcim_transfers: Sequence[DCIMTransfer],
-        sort_key: Callable,
-        exclude: Optional[Extension] = None,
+    dcim_transfers: Sequence[DCIMTransfer],
+    sort_key: Callable,
+    exclude: Optional[Extension] = None,
 ) -> Sequence[DCIMTransfer]:
     return tuple(
         sorted(

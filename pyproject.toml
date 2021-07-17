@@ -12,12 +12,19 @@ click = "^8.0.1"
 [tool.poetry.dev-dependencies]
 pytest = "^6.2.4"
 coverage = "^5.5"
+
+black = "*"
+
 flake8 = "^3.9.2"
 flake8-black = "*"
 flake8-quotes = "*"
 flake8-coding = "*"
 flake8-commas = "*"
 flake8-import-order = "*"
+
+[tool.black]
+line-length = 120
+target-version = ["py39"]
 
 [tool.poetry.scripts]
 simple-sd-copy = 'simple_sd_copy.main:main'

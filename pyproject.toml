@@ -13,6 +13,7 @@ click = "^8.0.1"
 pytest = "^6.2.4"
 coverage = "^5.5"
 
+isort = "^5.9.2"
 black = "*"
 
 flake8 = "^3.9.2"
@@ -25,6 +26,11 @@ flake8-import-order = "*"
 [tool.black]
 line-length = 120
 target-version = ["py39"]
+
+[tool.isort]
+line_length = 120
+multi_line_output = 3
+include_trailing_comma = "True"
 
 [tool.poetry.scripts]
 simple-sd-copy = 'simple_sd_copy.main:main'

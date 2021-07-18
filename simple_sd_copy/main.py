@@ -5,17 +5,17 @@ from pathlib import Path
 
 import click
 
-from simple_sd_copy.dcim_transfer import Extension, assert_target_sorting_matches_source, get_dcim_transfers
+from simple_sd_copy.dcim_transfer import (
+    Extension,
+    assert_target_sorting_matches_source,
+    get_dcim_transfers,
+)
 from simple_sd_copy.utils import check_if_exiftool_installed
 
 
 def copy_media_to_target(source_path: Path, target_path: Path):
     target_path.parent.mkdir(parents=True, exist_ok=True)
     shutil.copy2(src=source_path, dst=target_path)
-
-
-def update_exif_data(file_path: Path, rectified_modify_date: datetime):
-    pass
 
 
 def update_file_modify_date(file_path: Path, rectified_modify_date: datetime):
@@ -53,10 +53,6 @@ def main(src: Path, dst: Path, dry_run: bool, keep: bool):
 
         if not dry_run:
             copy_media_to_target(source_path=dcim_transfer.source_path, target_path=dcim_transfer.target_path)
-            update_exif_data(
-                file_path=dcim_transfer.target_path,
-                rectified_modify_date=dcim_transfer.rectified_modify_date,
-            )
             update_file_modify_date(
                 file_path=dcim_transfer.target_path,
                 rectified_modify_date=dcim_transfer.rectified_modify_date,

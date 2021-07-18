@@ -1,18 +1,14 @@
-from dataclasses import asdict, dataclass
-from datetime import datetime, timedelta
+from dataclasses import dataclass, fields
+from datetime import datetime
 from enum import Enum
 from operator import attrgetter
 from pathlib import Path
-from typing import Callable, Optional, Sequence, Union
+from typing import Any, Callable, Optional, Sequence, Union
 
 from exiftool import ExifTool
 
+from simple_sd_copy.cameras import Camera, dji_osmo_action, fujifilm_x_t3
 from simple_sd_copy.utils import UnexpectedDataError, get_datetime_from_str
-
-
-class Camera(Enum):
-    xt3 = "x-t3"
-    dji_osmo_action = "dji-oa"
 
 
 class Extension(Enum):
@@ -29,18 +25,19 @@ class BaseMedium:
     extension: Extension
     mime_type: str
 
+    def asdict_shallow(self) -> dict[str, Any]:
+        return {field.name: getattr(self, field.name) for field in fields(self)}
+
 
 @dataclass
 class Image(BaseMedium):
-    exif_create_date: datetime
-    exif_modify_date: datetime
+    exif_date: datetime
     resolution: str
 
 
 @dataclass
 class Video(BaseMedium):
-    exif_create_date: datetime
-    exif_modify_date: datetime
+    exif_date: datetime
     resolution: str
     fps: str
 
@@ -58,8 +55,8 @@ def get_camera_from_exif_data(exif_data: dict) -> Camera:
     if not camera_identifier:
         raise UnexpectedDataError("EXIF data does not match X-T3 or Osmo Action known outputs")
     return {
-        "X-T3": Camera.xt3,
-        "\u0010DJI.Meta": Camera.dji_osmo_action,
+        "X-T3": fujifilm_x_t3,
+        "\u0010DJI.Meta": dji_osmo_action,
     }[camera_identifier]
 
 
@@ -78,17 +75,15 @@ def get_image_or_video(media_file: Path) -> Union[Image, Video]:
 
     if base_medium.mime_type in ("video/quicktime",):
         metadata = Video(
-            **asdict(base_medium),
-            exif_modify_date=get_datetime_from_str(exif_data["QuickTime:CreateDate"]),
-            exif_create_date=get_datetime_from_str(exif_data["QuickTime:ModifyDate"]),
+            **base_medium.asdict_shallow(),
+            exif_date=get_datetime_from_str(exif_data[base_medium.camera.exif_date_field]),
             resolution=f"{exif_data['QuickTime:ImageHeight']}p",
             fps=f"{round(exif_data['QuickTime:VideoFrameRate'],2)}fps",
         )
     elif base_medium.mime_type in ("image/jpeg", "image/x-fujifilm-raf"):
         metadata = Image(
-            **asdict(base_medium),
-            exif_modify_date=get_datetime_from_str(exif_data["EXIF:CreateDate"]),
-            exif_create_date=get_datetime_from_str(exif_data["EXIF:ModifyDate"]),
+            **base_medium.asdict_shallow(),
+            exif_date=get_datetime_from_str(exif_data[base_medium.camera.exif_date_field]),
             resolution=f"{exif_data['EXIF:ExifImageWidth']}x{exif_data['EXIF:ExifImageHeight']}",
         )
     else:
@@ -100,11 +95,7 @@ def get_image_or_video(media_file: Path) -> Union[Image, Video]:
 
 
 def get_rectified_modify_date(metadata: Union[Image, Video]) -> datetime:
-    assert metadata.exif_modify_date == metadata.exif_create_date
-    return {
-        Camera.xt3: metadata.file_modify_date - timedelta(hours=1),
-        Camera.dji_osmo_action: metadata.exif_modify_date + timedelta(hours=2),
-    }[metadata.camera]
+    return metadata.exif_date + metadata.camera.exif_date_timedelta
 
 
 def get_target_path(destination: Path, metadata: Union[Image, Video], rectified_date: datetime) -> Path:
@@ -121,7 +112,7 @@ def get_target_path(destination: Path, metadata: Union[Image, Video], rectified_
             "_".join(
                 (
                     datetime.strftime(rectified_date, "%Y%m%d-%H%M%S"),
-                    metadata.camera.value,
+                    metadata.camera.name,
                     metadata.file_name,
                     *(
                         {
@@ -164,7 +155,7 @@ def get_sorted_transfers(
         sorted(
             filter(lambda obj: obj.metadata.extension != exclude, dcim_transfers) if exclude else dcim_transfers,
             key=sort_key,
-        )
+        ),
     )
 
 

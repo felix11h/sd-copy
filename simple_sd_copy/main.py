@@ -30,8 +30,8 @@ def remove_source_file(source_path: Path):
 @click.argument("src", type=click.Path(exists=True, path_type=Path))
 @click.argument("dst", type=click.Path(exists=True, path_type=Path))
 @click.option("--dry-run", "-n", default=False, is_flag=True)
-@click.option("--keep", "-k", default=False, is_flag=True)
-def main(src: Path, dst: Path, dry_run: bool, keep: bool):
+@click.option("--delete", "-d", default=False, is_flag=True)
+def main(src: Path, dst: Path, dry_run: bool, delete: bool):
 
     check_if_exiftool_installed()
     dcim_transfers = get_dcim_transfers(source_path=src, destination_path=dst)
@@ -57,7 +57,7 @@ def main(src: Path, dst: Path, dry_run: bool, keep: bool):
                 file_path=dcim_transfer.target_path,
                 rectified_modify_date=dcim_transfer.rectified_modify_date,
             )
-            if not keep:
+            if delete:
                 remove_source_file(source_path=dcim_transfer.source_path)
 
         else:

@@ -3,9 +3,12 @@
 
 Simple-sd-copy moves DCIM files from an SD card and sorts them according to metadata into a given target folder. The following cameras are supported:
 * Fujifilm X-T3
-* DJI Osmo Action (work in progress)
+* DJI Osmo Action
 
-For example, executing simple-sd-copy via
+
+## Usage
+
+Executing simple-sd-copy via
 ```shell
 simple-sd-copy [source path] [output path]
 ```
@@ -20,7 +23,7 @@ a DCIM folder structure in `[source path]` such as
 ├── DSCF0231.RAF
 └── DSCF0232.MOV
 ```
-would be copied to `[target path]` as follows
+is copied to `[target path]` with the following structure
 ````shell
 [target path]
 out/
@@ -54,7 +57,7 @@ to install the tool in your current environment.
 For development, install the project using Poetry as usual (`poetry install`).
 
 ### DCIM data
-If you need DCIM data for local or testing, use
+If you need DCIM data for local development or testing, use
 ```
 git submodule init
 ``` 
@@ -82,7 +85,3 @@ With `setup.py` present, you should be able to install in editable mode using `p
 
 This solution is from the discussion [here](https://github.com/python-poetry/poetry/discussions/1135#discussioncomment-145763). See also [this discussion](https://github.com/python-poetry/poetry/issues/34#issuecomment-870454738), [PEP 606](https://discuss.python.org/t/pronouncement-on-peps-660-and-662-editable-installs/9450) and the discussion [here](https://github.com/python-poetry/poetry/issues/761).
 
-## Usage
-```shell
-simple-sd-copy [source path] [output path]
-```

@@ -14,6 +14,7 @@ from simple_sd_copy.utils import UnexpectedDataError, get_datetime_from_str
 class Extension(Enum):
     jpg = ".jpg"
     mov = ".mov"
+    mp4 = ".mp4"
     raf = ".raf"
 
 
@@ -73,7 +74,7 @@ def get_image_or_video(media_file: Path) -> Union[Image, Video]:
         mime_type=exif_data["File:MIMEType"],
     )
 
-    if base_medium.mime_type in ("video/quicktime",):
+    if base_medium.mime_type in ("video/quicktime", "video/mp4"):
         metadata = Video(
             **base_medium.asdict_shallow(),
             exif_date=get_datetime_from_str(exif_data[base_medium.camera.exif_date_field]),
@@ -111,7 +112,7 @@ def get_target_path(destination: Path, metadata: Union[Image, Video], rectified_
         / Path(
             "_".join(
                 (
-                    datetime.strftime(rectified_date, "%Y%m%d-%H%M%S"),
+                    datetime.strftime(rectified_date, "%Y%m%d-%H%M"),
                     metadata.camera.name,
                     metadata.file_name,
                     *(
@@ -119,6 +120,7 @@ def get_target_path(destination: Path, metadata: Union[Image, Video], rectified_
                             "image/jpeg": get_image_file_name_additions,
                             "image/x-fujifilm-raf": get_image_file_name_additions,
                             "video/quicktime": get_video_file_name_additions,
+                            "video/mp4": get_video_file_name_additions,
                         }[metadata.mime_type](metadata)
                     ),
                 ),

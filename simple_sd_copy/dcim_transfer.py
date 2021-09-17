@@ -7,7 +7,7 @@ from typing import Any, Callable, Optional, Sequence, Union
 
 from exiftool import ExifTool
 
-from simple_sd_copy.cameras import Camera, dji_osmo_action, fujifilm_x_t3
+from simple_sd_copy.cameras import Camera, dji_osmo_action_photo_camera, dji_osmo_action_video_camera, fujifilm_x_t3
 from simple_sd_copy.utils import UnexpectedDataError, get_datetime_from_str
 
 
@@ -16,6 +16,7 @@ class Extension(Enum):
     mov = ".mov"
     mp4 = ".mp4"
     raf = ".raf"
+    aac = ".aac"
 
 
 @dataclass
@@ -51,24 +52,33 @@ class DCIMTransfer:
     target_path: Path
 
 
-def get_camera_from_exif_data(exif_data: dict) -> Camera:
+def get_camera(exif_data: dict) -> Camera:
     camera_identifier = exif_data.get("EXIF:Model") or exif_data.get("QuickTime:HandlerDescription")
     if not camera_identifier:
         raise UnexpectedDataError("EXIF data does not match X-T3 or Osmo Action known outputs")
     return {
         "X-T3": fujifilm_x_t3,
-        "\u0010DJI.Meta": dji_osmo_action,
+        "\u0010DJI.Meta": dji_osmo_action_video_camera,  # used in case of videos
+        "DJI Osmo Action": dji_osmo_action_photo_camera,  # used in case of images
     }[camera_identifier]
+
+
+def get_metadata(media_file: Path) -> dict:
+    with ExifTool() as exif_tool:
+        # On DJI Osmo Action, separate AAC audio files are recorded alongside slow motion video. The same file name is
+        # used; for example DJI_0375.AAC and DJI_0375.MOV. Since the audio files do not have Exif metadata, use instead
+        # the corresponding video file to provide surrogate Exif metadata.
+        metadata_src = media_file if not media_file.suffix == ".AAC" else Path(str(media_file).replace(".AAC", ".MOV"))
+        return exif_tool.get_metadata(filename=str(metadata_src))
 
 
 def get_image_or_video(media_file: Path) -> Union[Image, Video]:
 
-    with ExifTool() as exif_tool:
-        exif_data = exif_tool.get_metadata(str(media_file))
+    exif_data = get_metadata(media_file=media_file)
 
     base_medium = BaseMedium(
         file_modify_date=datetime.strptime(exif_data["File:FileModifyDate"], "%Y:%m:%d %H:%M:%S%z"),
-        camera=get_camera_from_exif_data(exif_data),
+        camera=get_camera(exif_data),
         file_name=media_file.stem.replace("_", ""),
         extension=Extension(media_file.suffix.lower()),
         mime_type=exif_data["File:MIMEType"],
@@ -79,7 +89,7 @@ def get_image_or_video(media_file: Path) -> Union[Image, Video]:
             **base_medium.asdict_shallow(),
             exif_date=get_datetime_from_str(exif_data[base_medium.camera.exif_date_field]),
             resolution=f"{exif_data['QuickTime:ImageHeight']}p",
-            fps=f"{round(exif_data['QuickTime:VideoFrameRate'],2)}fps",
+            fps=f"{round(exif_data['QuickTime:VideoFrameRate'], 2)}fps",
         )
     elif base_medium.mime_type in ("image/jpeg", "image/x-fujifilm-raf"):
         metadata = Image(

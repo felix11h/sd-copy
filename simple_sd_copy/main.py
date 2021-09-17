@@ -5,11 +5,7 @@ from pathlib import Path
 
 import click
 
-from simple_sd_copy.dcim_transfer import (
-    Extension,
-    assert_target_sorting_matches_source,
-    get_dcim_transfers,
-)
+from simple_sd_copy.dcim_transfer import Extension, assert_target_sorting_matches_source, get_dcim_transfers
 from simple_sd_copy.utils import check_if_exiftool_installed
 
 
@@ -37,7 +33,7 @@ def main(src: Path, dst: Path, dry_run: bool, delete: bool):
     dcim_transfers = get_dcim_transfers(source_path=src, destination_path=dst)
 
     # Assert that copied files maintain the sorting of the source files. Either raw or compressed images need to
-    # excluded, as cameras can create them at the same time using the same filename. Dependening on metadata included
+    # be excluded, as cameras can create them at the same time using the same filename. Depending on metadata included
     # in the target filename, this can lead to changes in the sorting:
     #   [source path]
     #   ├── DSCF0231.JPG

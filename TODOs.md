@@ -12,7 +12,7 @@
   --> `flake8` ok   
 * ~~correctly set file modification date (https://stackoverflow.com/a/52858040/692634)~~
 * ~~correctly set metadata?~~ Metadata will not be touched. Reliable information is timestamp in filename and modify date.
-* use pydantic for dataclass type validation?
+* use pydantic for dataclass type validation, parse camera model definitions from yaml
 * use mypy?
 * setup dependabot
 * `[can-delete]_simple-sd-copy-test` does not exist.

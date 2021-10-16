@@ -6,10 +6,10 @@
 * ~~setup linting (flake8)~~
 * ~~setup black~~
 * ~~setup isort~~
-* integrate pipeline
-  --> `isort . --diff` empty
-  --> `black . --diff` empty
-  --> `flake8` ok   
+* ~~integrate pipeline~~
+  ~~--> `isort . --diff` empty~~
+  ~~--> `black . --diff` empty~~
+  ~~--> `flake8` ok~~   
 * ~~correctly set file modification date (https://stackoverflow.com/a/52858040/692634)~~
 * ~~correctly set metadata?~~ Metadata will not be touched. Reliable information is timestamp in filename and modify date.
 * use pydantic for dataclass type validation, parse camera model definitions from yaml

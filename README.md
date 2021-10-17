@@ -58,14 +58,27 @@ For development, install the project using Poetry as usual (`poetry install`).
 
 ### DCIM data
 If you need DCIM data for local development or testing, use
-```
+```shell
 git submodule init
 ``` 
 to initialize your local configuration file, and 
-```
+```shell
 git submodule update
 ```
 to download the files. Alternatively you can clone this repository with the `--recurse-submodules` flag.
+
+### Run tests
+
+Run unit tests with
+```shell
+pytest tests/unit
+```
+and integration tests with
+```shell
+pytest tests/integration
+```
+Integration tests require the `dcim` git submodule.
+
 
 ### Note on editable mode
 It is currently not possible to directly install a `pyproject.toml` based package in editable mode (`pip install -e`). If you need this, you can create a setup.py following the steps below.

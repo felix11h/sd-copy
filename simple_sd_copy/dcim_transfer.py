@@ -151,10 +151,18 @@ def get_dcim_transfer_object(media_file: Path, destination: Path) -> DCIMTransfe
     )
 
 
+def is_media_file(file: Path) -> bool:
+    if file.stem.startswith("._"):
+        print(f"Found non-media file {file.name}, skipping.")
+        return False
+    return True
+
+
 def get_dcim_transfers(source_path: Path, destination_path: Path) -> Sequence[DCIMTransfer]:
     return tuple(
-        get_dcim_transfer_object(media_file=media_file, destination=destination_path)
-        for media_file in source_path.rglob("*")
+        get_dcim_transfer_object(media_file=file, destination=destination_path)
+        for file in source_path.rglob("*")
+        if is_media_file(file)
     )
 
 

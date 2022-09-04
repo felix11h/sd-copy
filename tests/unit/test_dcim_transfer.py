@@ -3,7 +3,7 @@ from unittest import TestCase
 from unittest.mock import patch
 
 from simple_sd_copy.cameras import dji_osmo_action_photo_camera, dji_osmo_action_video_camera, fujifilm_x_t3
-from simple_sd_copy.dcim_transfer import get_camera, get_metadata
+from simple_sd_copy.dcim_transfer import get_camera, get_metadata, is_media_file
 from simple_sd_copy.utils import UnexpectedDataError
 
 
@@ -19,6 +19,11 @@ class TestGetCamera(TestCase):
 
     def test_get_camera_dji_osmo_action_photo_camera(self):
         self.assertEqual(get_camera({"QuickTime:HandlerDescription": "DJI Osmo Action"}), dji_osmo_action_photo_camera)
+
+
+class TestIsMediaFile(TestCase):
+    def test_is_media_file_returns_false_for_dji_hidden_files(self):
+        self.assertFalse(is_media_file(Path("dcim/100MEDIA/._DJI_0373.MOV")))
 
 
 class TestGetMetadata(TestCase):

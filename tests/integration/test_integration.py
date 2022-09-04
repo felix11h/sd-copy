@@ -12,11 +12,19 @@ FUJIFILM_DCIM = os.path.join(DATA, "100_Fuji")
 DJI_OA_DCIM = os.path.join(DATA, "100MEDIA")
 
 
+def _run_process(command: str):
+    subprocess.run(command, check=True, shell=True)
+
+
 def _folder_empty(path: str) -> bool:
     if os.path.exists(path) and os.path.isdir(path):
         return not os.listdir(path)
     else:
         raise Exception(f"Directory {path} does not exist")
+
+
+def _number_of_files(path: str) -> int:
+    return len(os.listdir(path))
 
 
 class TestSimpleSdCopy(TestCase):
@@ -39,22 +47,35 @@ class TestSimpleSdCopy(TestCase):
         self.dji_oa_dcim_location.cleanup()
         self.output_location.cleanup()
 
-    def test_simple_sd_copy_dry_run(self):
+    def test_running_sd_copy_with_dry_run_does_not_copy_files(self):
         self.assertTrue(_folder_empty(path=self.output_location.name))
-        _ = subprocess.check_output(
-            ["simple-sd-copy", self.fuji_dcim_location.name, self.output_location.name, "--dry-run"],
+        _run_process(f"simple-sd-copy {self.fuji_dcim_location.name} {self.output_location.name} --dry-run")
+        self.assertTrue(_folder_empty(path=self.output_location.name))
+
+    def test_running_sd_copy_on_fujifilm_test_files_copies_expected_files(self):
+        self.assertTrue(_folder_empty(path=self.output_location.name))
+        _run_process(f"simple-sd-copy {self.fuji_dcim_location.name} {self.output_location.name}")
+        self.assertEqual(
+            _number_of_files(os.path.join(self.output_location.name, "2021-07-08")),
+            _number_of_files(self.fuji_dcim_location.name),
         )
+
+    def test_runnning_sd_copy_on_dji_test_files_copies_expected_files(self):
         self.assertTrue(_folder_empty(path=self.output_location.name))
+        _run_process(f"simple-sd-copy {self.dji_oa_dcim_location.name} {self.output_location.name}")
+        hidden_files = ("._DJI_0373.MOV",)
+        self.assertEqual(
+            _number_of_files(os.path.join(self.output_location.name, "2021-09-14")),
+            _number_of_files(self.dji_oa_dcim_location.name) - len(hidden_files),
+        )
 
-    def test_simple_sd_copy_multiple_formats(self):
+    def test_sd_copy_handles_existing_output_locations_correctly(self):
         self.assertTrue(_folder_empty(path=self.output_location.name))
-
-        _ = subprocess.check_output(["simple-sd-copy", self.fuji_dcim_location.name, self.output_location.name])
-        os.mkdir(os.path.join(self.output_location.name, "2021-09-14"))  # existing folders should not cause a problems
-        _ = subprocess.check_output(["simple-sd-copy", self.dji_oa_dcim_location.name, self.output_location.name])
-
-        self.assertFalse(_folder_empty(path=os.path.join(self.output_location.name, "2021-07-08")))
-        self.assertFalse(_folder_empty(path=os.path.join(self.output_location.name, "2021-09-14")))
+        output_location_subfolder = os.path.join(self.output_location.name, "2021-09-14")
+        os.mkdir(output_location_subfolder)
+        self.assertTrue(_folder_empty(output_location_subfolder))
+        _run_process(f"simple-sd-copy {self.dji_oa_dcim_location.name} {self.output_location.name}")
+        self.assertFalse(_folder_empty(output_location_subfolder))
 
 
 class TestGetImageOrVideo(TestCase):

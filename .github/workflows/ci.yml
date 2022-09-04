@@ -23,18 +23,7 @@ jobs:
           curl -sSL https://install.python-poetry.org | python - --yes --version=1.2.0
           echo "$HOME/.poetry/bin" >> $GITHUB_PATH
 
-      - name: Load cached Poetry virtual environment
-        id: cached-poetry-dependencies
-        uses: actions/cache@v2
-        with:
-          path: ~/virtualenvs
-          key: virtualenv-${{ runner.os }}-${{ hashFiles('**/poetry.lock') }}-cache-control-01
-
       - name: Poetry install dependencies
-        if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
-        run: poetry install --no-interaction --no-root
-
-      - name: Poetry install simple-sd-copy
         run: poetry install --no-interaction
 
       - name: Install ExifTool

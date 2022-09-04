@@ -12,6 +12,10 @@ FUJIFILM_DCIM = os.path.join(DATA, "100_Fuji")
 DJI_OA_DCIM = os.path.join(DATA, "100MEDIA")
 
 
+def _run_process(command: str):
+    subprocess.run(command, check=True, shell=True)
+
+
 def _folder_empty(path: str) -> bool:
     if os.path.exists(path) and os.path.isdir(path):
         return not os.listdir(path)
@@ -41,17 +45,15 @@ class TestSimpleSdCopy(TestCase):
 
     def test_simple_sd_copy_dry_run(self):
         self.assertTrue(_folder_empty(path=self.output_location.name))
-        _ = subprocess.check_output(
-            ["simple-sd-copy", self.fuji_dcim_location.name, self.output_location.name, "--dry-run"],
-        )
+        _run_process(f"simple-sd-copy {self.fuji_dcim_location.name} {self.output_location.name} --dry-run")
         self.assertTrue(_folder_empty(path=self.output_location.name))
 
     def test_simple_sd_copy_multiple_formats(self):
         self.assertTrue(_folder_empty(path=self.output_location.name))
 
-        _ = subprocess.check_output(["simple-sd-copy", self.fuji_dcim_location.name, self.output_location.name])
+        _run_process(f"simple-sd-copy {self.fuji_dcim_location.name} {self.output_location.name}")
         os.mkdir(os.path.join(self.output_location.name, "2021-09-14"))  # existing folders should not cause a problems
-        _ = subprocess.check_output(["simple-sd-copy", self.dji_oa_dcim_location.name, self.output_location.name])
+        _run_process(f"simple-sd-copy {self.dji_oa_dcim_location.name} {self.output_location.name}")
 
         self.assertFalse(_folder_empty(path=os.path.join(self.output_location.name, "2021-07-08")))
         self.assertFalse(_folder_empty(path=os.path.join(self.output_location.name, "2021-09-14")))

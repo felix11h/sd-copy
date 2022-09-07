@@ -63,12 +63,20 @@ def get_camera(exif_data: dict) -> Camera:
     }[camera_identifier]
 
 
+def get_matching_video_file_path(media_file) -> Path:
+    # On DJI Osmo Action, separate AAC audio files are recorded alongside slow motion video. The same file name is
+    # used; for example DJI_0375.AAC and DJI_0375.MOV. Since the audio files do not have Exif metadata, use instead
+    # the corresponding video file to provide surrogate Exif metadata.
+    (matching_video_file,) = filter(
+        os.path.exists,
+        tuple(str(media_file).replace(".AAC", suffix) for suffix in (".MOV", ".MP4")),
+    )
+    return Path(matching_video_file)
+
+
 def get_metadata(media_file: Path) -> dict:
     with ExifTool() as exif_tool:
-        # On DJI Osmo Action, separate AAC audio files are recorded alongside slow motion video. The same file name is
-        # used; for example DJI_0375.AAC and DJI_0375.MOV. Since the audio files do not have Exif metadata, use instead
-        # the corresponding video file to provide surrogate Exif metadata.
-        metadata_src = media_file if not media_file.suffix == ".AAC" else Path(str(media_file).replace(".AAC", ".MOV"))
+        metadata_src = media_file if not media_file.suffix == ".AAC" else get_matching_video_file_path(media_file)
         return exif_tool.get_metadata(filename=str(metadata_src))
 
 

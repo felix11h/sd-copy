@@ -1,3 +1,6 @@
+import json
+import logging
+import os.path
 from dataclasses import dataclass, fields
 from datetime import datetime
 from enum import Enum
@@ -149,6 +152,7 @@ def get_target_path(destination: Path, metadata: Union[Image, Video], rectified_
 
 
 def get_dcim_transfer_object(media_file: Path, destination: Path) -> DCIMTransfer:
+    logging.info(f"Getting DCIM object for {media_file}")
     metadata = get_image_or_video(media_file=media_file)
     rectified_modify_date = get_rectified_modify_date(metadata=metadata)
     return DCIMTransfer(
@@ -161,7 +165,7 @@ def get_dcim_transfer_object(media_file: Path, destination: Path) -> DCIMTransfe
 
 def is_media_file(file: Path) -> bool:
     if file.stem.startswith("._"):
-        print(f"Found non-media file {file.name}, skipping.")
+        logging.warning(f"Found non-media file {file.name}, skipping.")
         return False
     return True
 
@@ -187,7 +191,26 @@ def get_sorted_transfers(
     )
 
 
+def write_json_to_file(dcim_transfers: Sequence[DCIMTransfer], file_name: str):
+    Path(f"{file_name}.json").write_text(
+        json.dumps(
+            tuple(
+                {
+                    "file": str(dcim_transfer.source_path),
+                    "rectified_timestamp": str(dcim_transfer.rectified_modify_date),
+                }
+                for dcim_transfer in dcim_transfers
+            ),
+            indent=2,
+        ),
+    )
+
+
 def assert_target_sorting_matches_source(dcim_transfers: Sequence[DCIMTransfer], exclude: Optional[Extension]):
     sorted_by_source = get_sorted_transfers(dcim_transfers, sort_key=attrgetter("source_path"), exclude=exclude)
     sorted_by_target = get_sorted_transfers(dcim_transfers, sort_key=attrgetter("target_path"), exclude=exclude)
-    assert sorted_by_source == sorted_by_target
+
+    if sorted_by_source != sorted_by_target:
+        write_json_to_file(sorted_by_target, "sorted_by_target")
+        write_json_to_file(sorted_by_source, "sorted_by_source")
+        raise AssertionError

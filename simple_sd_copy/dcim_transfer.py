@@ -1,3 +1,6 @@
+import json
+import logging
+import os.path
 from dataclasses import dataclass, fields
 from datetime import datetime
 from enum import Enum
@@ -63,13 +66,25 @@ def get_camera(exif_data: dict) -> Camera:
     }[camera_identifier]
 
 
+def get_matching_video_file_path(media_file) -> Path:
+    # On DJI Osmo Action, separate AAC audio files are recorded alongside slow motion video. The same file name is
+    # used; for example DJI_0375.AAC and DJI_0375.MOV. Since the audio files do not have Exif metadata, use instead
+    # the corresponding video file to provide surrogate Exif metadata.
+    (matching_video_file,) = filter(
+        os.path.exists,
+        tuple(str(media_file).replace(".AAC", suffix) for suffix in (".MOV", ".MP4")),
+    )
+    return Path(matching_video_file)
+
+
 def get_metadata(media_file: Path) -> dict:
     with ExifTool() as exif_tool:
-        # On DJI Osmo Action, separate AAC audio files are recorded alongside slow motion video. The same file name is
-        # used; for example DJI_0375.AAC and DJI_0375.MOV. Since the audio files do not have Exif metadata, use instead
-        # the corresponding video file to provide surrogate Exif metadata.
-        metadata_src = media_file if not media_file.suffix == ".AAC" else Path(str(media_file).replace(".AAC", ".MOV"))
+        metadata_src = media_file if not media_file.suffix == ".AAC" else get_matching_video_file_path(media_file)
         return exif_tool.get_metadata(filename=str(metadata_src))
+
+
+def get_sanitized_file_name(path: Path) -> str:
+    return path.stem.replace("_", "", 1).replace("_", "-")
 
 
 def get_image_or_video(media_file: Path) -> Union[Image, Video]:
@@ -79,7 +94,7 @@ def get_image_or_video(media_file: Path) -> Union[Image, Video]:
     base_medium = BaseMedium(
         file_modify_date=datetime.strptime(exif_data["File:FileModifyDate"], "%Y:%m:%d %H:%M:%S%z"),
         camera=get_camera(exif_data),
-        file_name=media_file.stem.replace("_", ""),
+        file_name=get_sanitized_file_name(path=media_file),
         extension=Extension(media_file.suffix.lower()),
         mime_type=exif_data["File:MIMEType"],
     )
@@ -141,6 +156,7 @@ def get_target_path(destination: Path, metadata: Union[Image, Video], rectified_
 
 
 def get_dcim_transfer_object(media_file: Path, destination: Path) -> DCIMTransfer:
+    logging.info(f"Getting DCIM object for {media_file}")
     metadata = get_image_or_video(media_file=media_file)
     rectified_modify_date = get_rectified_modify_date(metadata=metadata)
     return DCIMTransfer(
@@ -153,7 +169,7 @@ def get_dcim_transfer_object(media_file: Path, destination: Path) -> DCIMTransfe
 
 def is_media_file(file: Path) -> bool:
     if file.stem.startswith("._"):
-        print(f"Found non-media file {file.name}, skipping.")
+        logging.warning(f"Found non-media file {file.name}, skipping.")
         return False
     return True
 
@@ -179,7 +195,26 @@ def get_sorted_transfers(
     )
 
 
+def write_json_to_file(dcim_transfers: Sequence[DCIMTransfer], file_name: str):
+    Path(f"{file_name}.json").write_text(
+        json.dumps(
+            tuple(
+                {
+                    "file": str(dcim_transfer.source_path),
+                    "rectified_timestamp": str(dcim_transfer.rectified_modify_date),
+                }
+                for dcim_transfer in dcim_transfers
+            ),
+            indent=2,
+        ),
+    )
+
+
 def assert_target_sorting_matches_source(dcim_transfers: Sequence[DCIMTransfer], exclude: Optional[Extension]):
     sorted_by_source = get_sorted_transfers(dcim_transfers, sort_key=attrgetter("source_path"), exclude=exclude)
     sorted_by_target = get_sorted_transfers(dcim_transfers, sort_key=attrgetter("target_path"), exclude=exclude)
-    assert sorted_by_source == sorted_by_target
+
+    if sorted_by_source != sorted_by_target:
+        write_json_to_file(sorted_by_target, "sorted_by_target")
+        write_json_to_file(sorted_by_source, "sorted_by_source")
+        raise AssertionError

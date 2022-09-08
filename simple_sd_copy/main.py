@@ -1,3 +1,4 @@
+import logging
 import os
 import shutil
 from datetime import datetime
@@ -27,7 +28,13 @@ def remove_source_file(source_path: Path):
 @click.argument("dst", type=click.Path(exists=True, path_type=Path))
 @click.option("--dry-run", "-n", default=False, is_flag=True)
 @click.option("--delete", "-d", default=False, is_flag=True)
-def main(src: Path, dst: Path, dry_run: bool, delete: bool):
+@click.option("--debug", "-v", default=False, is_flag=True)
+def main(src: Path, dst: Path, dry_run: bool, delete: bool, debug: bool):
+
+    logging.basicConfig(
+        level=logging.DEBUG if debug else logging.INFO,
+        format="%(levelname)s: %(message)s" if debug else "%(message)s",
+    )
 
     check_if_exiftool_installed()
     dcim_transfers = get_dcim_transfers(source_path=src, destination_path=dst)

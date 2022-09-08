@@ -3,7 +3,7 @@ from unittest import TestCase
 from unittest.mock import patch
 
 from simple_sd_copy.cameras import dji_osmo_action_photo_camera, dji_osmo_action_video_camera, fujifilm_x_t3
-from simple_sd_copy.dcim_transfer import get_camera, get_metadata, is_media_file
+from simple_sd_copy.dcim_transfer import get_camera, get_metadata, get_sanitized_file_name, is_media_file
 from simple_sd_copy.utils import UnexpectedDataError
 
 
@@ -26,14 +26,27 @@ class TestIsMediaFile(TestCase):
         self.assertFalse(is_media_file(Path("dcim/100MEDIA/._DJI_0373.MOV")))
 
 
-class TestGetMetadata(TestCase):
-    @patch("simple_sd_copy.dcim_transfer.ExifTool")
-    def test_get_metadata_for_aac_file(self, mock_exiftool):
-        _ = get_metadata(Path("path.AAC"))
-        mock_exiftool.return_value.__enter__.return_value.get_metadata.assert_called_with(filename="path.MOV")
+class TestGetSanitizedFileName(TestCase):
+    def test_get_sanitized_file_name_for_known_cases(self):
+        self.assertEqual("DJI0375", get_sanitized_file_name(Path("dcim/100MEDIA/DJI_0375.MOV")))
+        self.assertEqual("DJI0013-001", get_sanitized_file_name(Path("dcim/100MEDIA/DJI_0013_001.MP4")))
 
+
+class TestGetMetadata(TestCase):
+    @patch("simple_sd_copy.dcim_transfer.get_matching_video_file_path")
     @patch("simple_sd_copy.dcim_transfer.ExifTool")
-    def test_get_metadata_for_non_aac_files(self, mock_exiftool):
-        path_str = "path.MOV"
-        _ = get_metadata(Path(path_str))
-        mock_exiftool.return_value.__enter__.return_value.get_metadata.assert_called_with(filename=path_str)
+    def test_get_metadata_makes_expected_calls_for_aac_file(self, mock_exiftool, mock_get_matching_video_file_path):
+        test_path = Path("test/path.AAC")
+        _ = get_metadata(test_path)
+        mock_get_matching_video_file_path.assert_called_once_with(test_path)
+        mock_exiftool.return_value.__enter__.return_value.get_metadata.assert_called_with(
+            filename=str(mock_get_matching_video_file_path.return_value),
+        )
+
+    @patch("simple_sd_copy.dcim_transfer.get_matching_video_file_path")
+    @patch("simple_sd_copy.dcim_transfer.ExifTool")
+    def test_get_metadata_makes_expected_calls_for_video_file(self, mock_exiftool, mock_get_matching_video_file_path):
+        test_path = Path("test/path.MOV")
+        _ = get_metadata(Path(test_path))
+        mock_get_matching_video_file_path.assert_not_called()
+        mock_exiftool.return_value.__enter__.return_value.get_metadata.assert_called_with(filename=str(test_path))

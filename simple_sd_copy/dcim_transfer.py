@@ -83,6 +83,10 @@ def get_metadata(media_file: Path) -> dict:
         return exif_tool.get_metadata(filename=str(metadata_src))
 
 
+def get_sanitized_file_name(path: Path) -> str:
+    return path.stem.replace("_", "", 1).replace("_", "-")
+
+
 def get_image_or_video(media_file: Path) -> Union[Image, Video]:
 
     exif_data = get_metadata(media_file=media_file)
@@ -90,7 +94,7 @@ def get_image_or_video(media_file: Path) -> Union[Image, Video]:
     base_medium = BaseMedium(
         file_modify_date=datetime.strptime(exif_data["File:FileModifyDate"], "%Y:%m:%d %H:%M:%S%z"),
         camera=get_camera(exif_data),
-        file_name=media_file.stem.replace("_", ""),
+        file_name=get_sanitized_file_name(path=media_file),
         extension=Extension(media_file.suffix.lower()),
         mime_type=exif_data["File:MIMEType"],
     )

@@ -24,8 +24,8 @@ def _folder_empty(path: str) -> bool:
         raise Exception(f"Directory {path} does not exist")
 
 
-def _number_of_files(path: str) -> int:
-    return len(os.listdir(path))
+def _number_of_files(dir_path: str) -> int:
+    return len(tuple(path for path in Path(dir_path).rglob("*") if path.is_file()))
 
 
 class TestSdCopy(TestCase):
@@ -57,7 +57,7 @@ class TestSdCopy(TestCase):
         self.assertTrue(_folder_empty(path=self.output_location.name))
         _run_process(f"sd-copy {self.fuji_dcim_location.name} {self.output_location.name}")
         self.assertEqual(
-            _number_of_files(os.path.join(self.output_location.name, "2021-07-08")),
+            _number_of_files(self.output_location.name),
             _number_of_files(self.fuji_dcim_location.name),
         )
 
@@ -66,7 +66,7 @@ class TestSdCopy(TestCase):
         _run_process(f"sd-copy {self.dji_oa_dcim_location.name} {self.output_location.name}")
         hidden_files = ("._DJI_0373.MOV",)
         self.assertEqual(
-            _number_of_files(os.path.join(self.output_location.name, "2021-09-14")),
+            _number_of_files(self.output_location.name),
             _number_of_files(self.dji_oa_dcim_location.name) - len(hidden_files),
         )
 
@@ -94,3 +94,16 @@ class TestGetImageOrVideo(TestCase):
         self.assertIsInstance(get_image_or_video(dji_oa_dcim_path / "DJI_0375.AAC"), Video)
         self.assertIsInstance(get_image_or_video(dji_oa_dcim_path / "DJI_0376.JPG"), Image)
         self.assertIsInstance(get_image_or_video(dji_oa_dcim_path / "DJI_0377.MP4"), Video)
+
+
+class TestGetDcimTransfers(TestCase):
+    def setUp(self):
+        self.input_output_map = json.loads(Path("tests/integration/expected_filenames.json").read_text())
+
+    def test_dcim_transfer_has_expected_output_paths(self):
+        dcim_transfers = get_dcim_transfers(source_path=Path("dcim/100MEDIA"), destination_path=Path("/tmp"))
+        for input_path, expected_output_path in self.input_output_map.items():
+            (transfer,) = tuple(
+                dcim_transfer for dcim_transfer in dcim_transfers if dcim_transfer.source_path == Path(input_path)
+            )
+            self.assertEqual(Path(expected_output_path), transfer.target_path)

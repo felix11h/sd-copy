@@ -2,9 +2,9 @@ from pathlib import Path
 from unittest import TestCase
 from unittest.mock import patch
 
-from simple_sd_copy.cameras import dji_osmo_action_photo_camera, dji_osmo_action_video_camera, fujifilm_x_t3
-from simple_sd_copy.dcim_transfer import get_camera, get_metadata, get_sanitized_file_name, is_media_file
-from simple_sd_copy.utils import UnexpectedDataError
+from sd_copy.cameras import dji_osmo_action_photo_camera, dji_osmo_action_video_camera, fujifilm_x_t3
+from sd_copy.dcim_transfer import get_camera, get_metadata, get_sanitized_file_name, is_media_file
+from sd_copy.utils import UnexpectedDataError
 
 
 class TestGetCamera(TestCase):
@@ -33,8 +33,8 @@ class TestGetSanitizedFileName(TestCase):
 
 
 class TestGetMetadata(TestCase):
-    @patch("simple_sd_copy.dcim_transfer.get_matching_video_file_path")
-    @patch("simple_sd_copy.dcim_transfer.ExifTool")
+    @patch("sd_copy.dcim_transfer.get_matching_video_file_path")
+    @patch("sd_copy.dcim_transfer.ExifTool")
     def test_get_metadata_makes_expected_calls_for_aac_file(self, mock_exiftool, mock_get_matching_video_file_path):
         test_path = Path("test/path.AAC")
         _ = get_metadata(test_path)
@@ -43,8 +43,8 @@ class TestGetMetadata(TestCase):
             filename=str(mock_get_matching_video_file_path.return_value),
         )
 
-    @patch("simple_sd_copy.dcim_transfer.get_matching_video_file_path")
-    @patch("simple_sd_copy.dcim_transfer.ExifTool")
+    @patch("sd_copy.dcim_transfer.get_matching_video_file_path")
+    @patch("sd_copy.dcim_transfer.ExifTool")
     def test_get_metadata_makes_expected_calls_for_video_file(self, mock_exiftool, mock_get_matching_video_file_path):
         test_path = Path("test/path.MOV")
         _ = get_metadata(Path(test_path))

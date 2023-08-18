@@ -6,8 +6,8 @@ from pathlib import Path
 
 import click
 
-from simple_sd_copy.dcim_transfer import Extension, assert_target_sorting_matches_source, get_dcim_transfers
-from simple_sd_copy.utils import check_if_exiftool_installed
+from sd_copy.dcim_transfer import Extension, assert_target_sorting_matches_source, get_dcim_transfers
+from sd_copy.utils import check_if_exiftool_installed
 
 
 def copy_media_to_target(source_path: Path, target_path: Path):

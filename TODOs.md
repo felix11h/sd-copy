@@ -16,3 +16,11 @@
 * use mypy?
 * setup dependabot
 * `[can-delete]_simple-sd-copy-test` does not exist.
+
+
+* rename from simple-sd-copy to sd-copy
+* document timestamp approach (filename: unaware, file modified date: aware, metadata timestamp: never use, unreliable) 
+* dockerize
+* rewrite tests
+* replace pyexiftool with direct ExifTool calls
+* add update timestamp feature

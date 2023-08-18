@@ -1,7 +1,7 @@
 from datetime import datetime
 from unittest import TestCase
 
-from simple_sd_copy.utils import get_datetime_from_str
+from sd_copy.utils import get_datetime_from_str
 
 
 class GetDatetimeFromString(TestCase):

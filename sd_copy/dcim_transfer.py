@@ -10,8 +10,8 @@ from typing import Any, Callable, Optional, Sequence, Union
 
 from exiftool import ExifTool
 
-from simple_sd_copy.cameras import Camera, dji_osmo_action_photo_camera, dji_osmo_action_video_camera, fujifilm_x_t3
-from simple_sd_copy.utils import UnexpectedDataError, get_datetime_from_str
+from sd_copy.cameras import Camera, dji_osmo_action_photo_camera, dji_osmo_action_video_camera, fujifilm_x_t3
+from sd_copy.utils import UnexpectedDataError, get_datetime_from_str
 
 
 class Extension(Enum):

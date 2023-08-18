@@ -88,7 +88,6 @@ def get_sanitized_file_name(path: Path) -> str:
 
 
 def get_image_or_video(media_file: Path) -> Union[Image, Video]:
-
     exif_data = get_metadata(media_file=media_file)
 
     base_medium = BaseMedium(

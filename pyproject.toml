@@ -5,18 +5,18 @@ description = ""
 authors = ["Felix Hoffmann <felix11h@github.nomail>"]
 
 [tool.poetry.dependencies]
-python = "^3.9"
-PyExifTool = "^0.4.9"
-click = "^8.0.1"
+python = "^3.11"
+PyExifTool = "<0.5"
+click = "*"
 
 [tool.poetry.dev-dependencies]
-pytest = "^6.2.4"
-coverage = "^5.5"
+pytest = "*"
+coverage = "*"
 
-isort = "^5.9.2"
+isort = "*"
 black = "*"
 
-flake8 = "^3.9.2"
+flake8 = "*"
 flake8-black = "*"
 flake8-quotes = "*"
 flake8-coding = "*"

@@ -30,7 +30,6 @@ def remove_source_file(source_path: Path):
 @click.option("--delete", "-d", default=False, is_flag=True)
 @click.option("--debug", "-v", default=False, is_flag=True)
 def main(src: Path, dst: Path, dry_run: bool, delete: bool, debug: bool):
-
     logging.basicConfig(
         level=logging.DEBUG if debug else logging.INFO,
         format="%(levelname)s: %(message)s" if debug else "%(message)s",
@@ -53,7 +52,6 @@ def main(src: Path, dst: Path, dry_run: bool, delete: bool, debug: bool):
     assert_target_sorting_matches_source(dcim_transfers=dcim_transfers, exclude=Extension.raf)
 
     for dcim_transfer in dcim_transfers:
-
         if not dry_run:
             copy_media_to_target(source_path=dcim_transfer.source_path, target_path=dcim_transfer.target_path)
             update_file_modify_date(

@@ -6,7 +6,7 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 from unittest import TestCase
 
-from sd_copy.dcim_transfer import Image, Video, get_image_or_video, get_dcim_transfers
+from sd_copy.dcim_transfer import Image, Video, get_dcim_transfers, get_image_or_video
 
 DATA = "dcim"
 FUJIFILM_DCIM = os.path.join(DATA, "100_Fuji")

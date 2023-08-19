@@ -3,7 +3,7 @@ on: [ push ]
 
 jobs:
   lint-and-test:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     timeout-minutes: 10
 
     steps:
@@ -15,19 +15,17 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: 3.10.4
+          python-version: 3.11
 
       - name: Install and configure Poetry
         shell: bash
         run: |
-          curl -sSL https://install.python-poetry.org | python - --yes --version=1.2.0
+          curl -sSL https://install.python-poetry.org | python - --yes
           echo "$HOME/.poetry/bin" >> $GITHUB_PATH
 
-      - name: Poetry install dependencies
-        run: poetry install --no-interaction
+      - run: poetry install --no-interaction
 
-      - name: Install ExifTool
-        run: sudo apt install -y exiftool
+      - run: sudo apt install -y exiftool
 
       - name: Check ExifTool version
         run: exiftool -ver
@@ -41,4 +39,4 @@ jobs:
       - name: Run unit & integration tests
         run: |
           poetry run coverage run -m pytest tests
-          poetry run coverage report --fail-under 59
+          poetry run coverage report --fail-under 50

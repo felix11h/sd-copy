@@ -1,16 +1,16 @@
 
-# Simple-sd-copy
+# Sd-copy
 
-Simple-sd-copy moves DCIM files from an SD card and sorts them according to metadata into a given target folder. The following cameras are supported:
+Sd-copy moves DCIM files from an SD card and sorts them according to metadata into a given target folder. The following cameras are supported:
 * Fujifilm X-T3
 * DJI Osmo Action
 
 
 ## Usage
 
-Executing simple-sd-copy via
+Executing sd-copy via
 ```shell
-simple-sd-copy [source path] [output path]
+sd-copy [source path] [output path]
 ```
 a DCIM folder structure in `[source path]` such as
 ```shell

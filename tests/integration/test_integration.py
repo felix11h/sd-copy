@@ -1,3 +1,4 @@
+import json
 import os
 import subprocess
 from distutils.dir_util import copy_tree
@@ -5,7 +6,7 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 from unittest import TestCase
 
-from simple_sd_copy.dcim_transfer import Image, Video, get_image_or_video
+from sd_copy.dcim_transfer import Image, Video, get_dcim_transfers, get_image_or_video
 
 DATA = "dcim"
 FUJIFILM_DCIM = os.path.join(DATA, "100_Fuji")
@@ -23,11 +24,11 @@ def _folder_empty(path: str) -> bool:
         raise Exception(f"Directory {path} does not exist")
 
 
-def _number_of_files(path: str) -> int:
-    return len(os.listdir(path))
+def _number_of_files(dir_path: str) -> int:
+    return len(tuple(path for path in Path(dir_path).rglob("*") if path.is_file()))
 
 
-class TestSimpleSdCopy(TestCase):
+class TestSdCopy(TestCase):
     def setUp(self):
         """Called for every test method. If this gets too much, use classmethod setUpClass instead."""
 
@@ -49,23 +50,23 @@ class TestSimpleSdCopy(TestCase):
 
     def test_running_sd_copy_with_dry_run_does_not_copy_files(self):
         self.assertTrue(_folder_empty(path=self.output_location.name))
-        _run_process(f"simple-sd-copy {self.fuji_dcim_location.name} {self.output_location.name} --dry-run")
+        _run_process(f"sd-copy {self.fuji_dcim_location.name} {self.output_location.name} --dry-run")
         self.assertTrue(_folder_empty(path=self.output_location.name))
 
     def test_running_sd_copy_on_fujifilm_test_files_copies_expected_files(self):
         self.assertTrue(_folder_empty(path=self.output_location.name))
-        _run_process(f"simple-sd-copy {self.fuji_dcim_location.name} {self.output_location.name}")
+        _run_process(f"sd-copy {self.fuji_dcim_location.name} {self.output_location.name}")
         self.assertEqual(
-            _number_of_files(os.path.join(self.output_location.name, "2021-07-08")),
+            _number_of_files(self.output_location.name),
             _number_of_files(self.fuji_dcim_location.name),
         )
 
     def test_runnning_sd_copy_on_dji_test_files_copies_expected_files(self):
         self.assertTrue(_folder_empty(path=self.output_location.name))
-        _run_process(f"simple-sd-copy {self.dji_oa_dcim_location.name} {self.output_location.name}")
+        _run_process(f"sd-copy {self.dji_oa_dcim_location.name} {self.output_location.name}")
         hidden_files = ("._DJI_0373.MOV",)
         self.assertEqual(
-            _number_of_files(os.path.join(self.output_location.name, "2021-09-14")),
+            _number_of_files(self.output_location.name),
             _number_of_files(self.dji_oa_dcim_location.name) - len(hidden_files),
         )
 
@@ -74,7 +75,7 @@ class TestSimpleSdCopy(TestCase):
         output_location_subfolder = os.path.join(self.output_location.name, "2021-09-14")
         os.mkdir(output_location_subfolder)
         self.assertTrue(_folder_empty(output_location_subfolder))
-        _run_process(f"simple-sd-copy {self.dji_oa_dcim_location.name} {self.output_location.name}")
+        _run_process(f"sd-copy {self.dji_oa_dcim_location.name} {self.output_location.name}")
         self.assertFalse(_folder_empty(output_location_subfolder))
 
 
@@ -93,3 +94,20 @@ class TestGetImageOrVideo(TestCase):
         self.assertIsInstance(get_image_or_video(dji_oa_dcim_path / "DJI_0375.AAC"), Video)
         self.assertIsInstance(get_image_or_video(dji_oa_dcim_path / "DJI_0376.JPG"), Image)
         self.assertIsInstance(get_image_or_video(dji_oa_dcim_path / "DJI_0377.MP4"), Video)
+
+
+class TestGetDcimTransfers(TestCase):
+    def setUp(self):
+        self.input_output_map = json.loads(Path("tests/integration/expected_filenames.json").read_text())
+
+    def test_dcim_transfer_has_expected_output_paths(self):
+        dcim_transfers = get_dcim_transfers(
+            source_path=Path("dcim/100MEDIA"),
+            destination_path=Path("/tmp"),
+            time_offset=0,
+        )
+        for input_path, expected_output_path in self.input_output_map.items():
+            (transfer,) = tuple(
+                dcim_transfer for dcim_transfer in dcim_transfers if dcim_transfer.source_path == Path(input_path)
+            )
+            self.assertEqual(Path(expected_output_path), transfer.target_path)

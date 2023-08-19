@@ -6,13 +6,18 @@ from pathlib import Path
 
 import click
 
-from simple_sd_copy.dcim_transfer import Extension, assert_target_sorting_matches_source, get_dcim_transfers
-from simple_sd_copy.utils import check_if_exiftool_installed
+from sd_copy.dcim_transfer import Extension, assert_target_sorting_matches_source, get_dcim_transfers
+from sd_copy.utils import CopyError, check_if_exiftool_installed, get_checksum
+
+TIME_OFFSET_HELP = (
+    "Timedelta in seconds to add to the modification date. Determine for example via "
+    "`(datetime.strptime(desired_date, format) - datetime.strptime(recorded_date, format)).total_seconds()`."
+)
 
 
 def copy_media_to_target(source_path: Path, target_path: Path):
     target_path.parent.mkdir(parents=True, exist_ok=True)
-    shutil.copy2(src=source_path, dst=target_path)
+    shutil.copy2(src=source_path, dst=target_path)  # copy2 also copies metadata (such as modified date)
 
 
 def update_file_modify_date(file_path: Path, rectified_modify_date: datetime):
@@ -26,18 +31,18 @@ def remove_source_file(source_path: Path):
 @click.command()
 @click.argument("src", type=click.Path(exists=True, path_type=Path))
 @click.argument("dst", type=click.Path(exists=True, path_type=Path))
+@click.option("--time-offset", "-td", default=0, type=int, help=TIME_OFFSET_HELP)
 @click.option("--dry-run", "-n", default=False, is_flag=True)
 @click.option("--delete", "-d", default=False, is_flag=True)
 @click.option("--debug", "-v", default=False, is_flag=True)
-def main(src: Path, dst: Path, dry_run: bool, delete: bool, debug: bool):
-
+def main(src: Path, dst: Path, time_offset: int, dry_run: bool, delete: bool, debug: bool):
     logging.basicConfig(
         level=logging.DEBUG if debug else logging.INFO,
         format="%(levelname)s: %(message)s" if debug else "%(message)s",
     )
 
     check_if_exiftool_installed()
-    dcim_transfers = get_dcim_transfers(source_path=src, destination_path=dst)
+    dcim_transfers = get_dcim_transfers(source_path=src, destination_path=dst, time_offset=time_offset)
 
     # Assert that copied files maintain the sorting of the source files. Either raw or compressed images need to
     # be excluded, as cameras can create them at the same time using the same filename. Depending on metadata included
@@ -53,13 +58,20 @@ def main(src: Path, dst: Path, dry_run: bool, delete: bool, debug: bool):
     assert_target_sorting_matches_source(dcim_transfers=dcim_transfers, exclude=Extension.raf)
 
     for dcim_transfer in dcim_transfers:
-
         if not dry_run:
+            source_checksum = get_checksum(file=dcim_transfer.source_path)
+            click.secho(f"Copying {dcim_transfer.source_path} to {dcim_transfer.target_path} ... ", nl=False)
             copy_media_to_target(source_path=dcim_transfer.source_path, target_path=dcim_transfer.target_path)
+            click.secho("OK", fg="green", nl=False)
             update_file_modify_date(
                 file_path=dcim_transfer.target_path,
                 rectified_modify_date=dcim_transfer.rectified_modify_date,
             )
+            click.secho("  Checksum ... ", nl=False)
+            target_checksum = get_checksum(file=dcim_transfer.target_path)
+            click.secho("OK", fg="green")
+            if source_checksum != target_checksum:
+                raise CopyError(f"Target checksum does not match source checksum for {dcim_transfer.source_path.name}")
             if delete:
                 remove_source_file(source_path=dcim_transfer.source_path)
 

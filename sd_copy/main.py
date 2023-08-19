@@ -9,6 +9,11 @@ import click
 from sd_copy.dcim_transfer import Extension, assert_target_sorting_matches_source, get_dcim_transfers
 from sd_copy.utils import CopyError, check_if_exiftool_installed, get_checksum
 
+TIME_OFFSET_HELP = (
+    "Timedelta in seconds to add to the modification date. Determine for example via "
+    "`(datetime.strptime(desired_date, format) - datetime.strptime(recorded_date, format)).total_seconds()`."
+)
+
 
 def copy_media_to_target(source_path: Path, target_path: Path):
     target_path.parent.mkdir(parents=True, exist_ok=True)
@@ -26,17 +31,18 @@ def remove_source_file(source_path: Path):
 @click.command()
 @click.argument("src", type=click.Path(exists=True, path_type=Path))
 @click.argument("dst", type=click.Path(exists=True, path_type=Path))
+@click.option("--time-offset", "-td", default=0, type=int, help=TIME_OFFSET_HELP)
 @click.option("--dry-run", "-n", default=False, is_flag=True)
 @click.option("--delete", "-d", default=False, is_flag=True)
 @click.option("--debug", "-v", default=False, is_flag=True)
-def main(src: Path, dst: Path, dry_run: bool, delete: bool, debug: bool):
+def main(src: Path, dst: Path, time_offset: int, dry_run: bool, delete: bool, debug: bool):
     logging.basicConfig(
         level=logging.DEBUG if debug else logging.INFO,
         format="%(levelname)s: %(message)s" if debug else "%(message)s",
     )
 
     check_if_exiftool_installed()
-    dcim_transfers = get_dcim_transfers(source_path=src, destination_path=dst)
+    dcim_transfers = get_dcim_transfers(source_path=src, destination_path=dst, time_offset=time_offset)
 
     # Assert that copied files maintain the sorting of the source files. Either raw or compressed images need to
     # be excluded, as cameras can create them at the same time using the same filename. Depending on metadata included

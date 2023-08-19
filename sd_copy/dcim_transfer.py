@@ -4,7 +4,7 @@ import os.path
 import shlex
 import subprocess
 from dataclasses import dataclass, fields
-from datetime import datetime
+from datetime import datetime, timedelta
 from enum import Enum
 from operator import attrgetter
 from pathlib import Path
@@ -132,8 +132,8 @@ def get_image_or_video(media_file: Path) -> Union[Image, Video]:
     return metadata
 
 
-def get_rectified_modify_date(metadata: Union[Image, Video]) -> datetime:
-    return metadata.exif_date + metadata.camera.exif_date_timedelta
+def get_rectified_modify_date(metadata: Union[Image, Video], time_offset: int) -> datetime:
+    return metadata.exif_date + metadata.camera.exif_date_timedelta + timedelta(seconds=time_offset)
 
 
 def get_target_path(destination: Path, metadata: Union[Image, Video], rectified_date: datetime) -> Path:
@@ -167,10 +167,10 @@ def get_target_path(destination: Path, metadata: Union[Image, Video], rectified_
     )
 
 
-def get_dcim_transfer_object(media_file: Path, destination: Path) -> DCIMTransfer:
+def get_dcim_transfer_object(media_file: Path, destination: Path, time_offset: int) -> DCIMTransfer:
     logging.info(f"Getting DCIM object for {media_file}")
     metadata = get_image_or_video(media_file=media_file)
-    rectified_modify_date = get_rectified_modify_date(metadata=metadata)
+    rectified_modify_date = get_rectified_modify_date(metadata=metadata, time_offset=time_offset)
     return DCIMTransfer(
         source_path=media_file,
         metadata=metadata,
@@ -186,9 +186,9 @@ def is_media_file(file: Path) -> bool:
     return True
 
 
-def get_dcim_transfers(source_path: Path, destination_path: Path) -> Sequence[DCIMTransfer]:
+def get_dcim_transfers(source_path: Path, destination_path: Path, time_offset: int) -> Sequence[DCIMTransfer]:
     return tuple(
-        get_dcim_transfer_object(media_file=file, destination=destination_path)
+        get_dcim_transfer_object(media_file=file, destination=destination_path, time_offset=time_offset)
         for file in source_path.rglob("*")
         if is_media_file(file)
     )

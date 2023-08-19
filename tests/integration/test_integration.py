@@ -101,7 +101,11 @@ class TestGetDcimTransfers(TestCase):
         self.input_output_map = json.loads(Path("tests/integration/expected_filenames.json").read_text())
 
     def test_dcim_transfer_has_expected_output_paths(self):
-        dcim_transfers = get_dcim_transfers(source_path=Path("dcim/100MEDIA"), destination_path=Path("/tmp"))
+        dcim_transfers = get_dcim_transfers(
+            source_path=Path("dcim/100MEDIA"),
+            destination_path=Path("/tmp"),
+            time_offset=0,
+        )
         for input_path, expected_output_path in self.input_output_map.items():
             (transfer,) = tuple(
                 dcim_transfer for dcim_transfer in dcim_transfers if dcim_transfer.source_path == Path(input_path)

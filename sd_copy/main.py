@@ -60,12 +60,16 @@ def main(src: Path, dst: Path, time_offset: int, dry_run: bool, delete: bool, de
     for dcim_transfer in dcim_transfers:
         if not dry_run:
             source_checksum = get_checksum(file=dcim_transfer.source_path)
+            click.secho(f"Copying {dcim_transfer.source_path} to {dcim_transfer.target_path} ... ", nl=False)
             copy_media_to_target(source_path=dcim_transfer.source_path, target_path=dcim_transfer.target_path)
+            click.secho("OK", fg="green", nl=False)
             update_file_modify_date(
                 file_path=dcim_transfer.target_path,
                 rectified_modify_date=dcim_transfer.rectified_modify_date,
             )
+            click.secho("  Checksum ... ", nl=False)
             target_checksum = get_checksum(file=dcim_transfer.target_path)
+            click.secho("OK", fg="green")
             if source_checksum != target_checksum:
                 raise CopyError(f"Target checksum does not match source checksum for {dcim_transfer.source_path.name}")
             if delete:

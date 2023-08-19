@@ -34,19 +34,27 @@ class TestGetSanitizedFileName(TestCase):
 
 class TestGetMetadata(TestCase):
     @patch("sd_copy.dcim_transfer.get_matching_video_file_path")
-    @patch("sd_copy.dcim_transfer.ExifTool")
-    def test_get_metadata_makes_expected_calls_for_aac_file(self, mock_exiftool, mock_get_matching_video_file_path):
+    @patch("sd_copy.dcim_transfer.get_metadata_from_exiftool")
+    def test_get_metadata_makes_expected_calls_for_aac_file(
+        self,
+        mock_get_metdata_from_exiftool,
+        mock_get_matching_video_file_path,
+    ):
         test_path = Path("test/path.AAC")
         _ = get_metadata(test_path)
         mock_get_matching_video_file_path.assert_called_once_with(test_path)
-        mock_exiftool.return_value.__enter__.return_value.get_metadata.assert_called_with(
-            filename=str(mock_get_matching_video_file_path.return_value),
-        )
+        mock_get_metdata_from_exiftool.assert_called_with(media_file=mock_get_matching_video_file_path.return_value)
 
     @patch("sd_copy.dcim_transfer.get_matching_video_file_path")
-    @patch("sd_copy.dcim_transfer.ExifTool")
-    def test_get_metadata_makes_expected_calls_for_video_file(self, mock_exiftool, mock_get_matching_video_file_path):
+    @patch("sd_copy.dcim_transfer.get_metadata_from_exiftool")
+    def test_get_metadata_makes_expected_calls_for_video_file(
+        self,
+        mock_get_metadata_from_exiftool,
+        mock_get_matching_video_file_path,
+    ):
         test_path = Path("test/path.MOV")
         _ = get_metadata(Path(test_path))
         mock_get_matching_video_file_path.assert_not_called()
-        mock_exiftool.return_value.__enter__.return_value.get_metadata.assert_called_with(filename=str(test_path))
+        mock_get_metadata_from_exiftool.assert_called_with(media_file=test_path)
+
+    pass

@@ -1,6 +1,8 @@
 import json
 import logging
 import os.path
+import shlex
+import subprocess
 from dataclasses import dataclass, fields
 from datetime import datetime
 from enum import Enum
@@ -8,10 +10,8 @@ from operator import attrgetter
 from pathlib import Path
 from typing import Any, Callable, Optional, Sequence, Union
 
-from exiftool import ExifTool
-
 from sd_copy.cameras import Camera, dji_osmo_action_photo_camera, dji_osmo_action_video_camera, fujifilm_x_t3
-from sd_copy.utils import UnexpectedDataError, get_datetime_from_str
+from sd_copy.utils import UnexpectedDataError, get_datetime_from_str, get_single_value
 
 
 class Extension(Enum):
@@ -77,10 +77,23 @@ def get_matching_video_file_path(media_file) -> Path:
     return Path(matching_video_file)
 
 
+def get_metadata_from_exiftool(media_file: Path) -> dict:
+    return get_single_value(
+        json.loads(
+            subprocess.run(
+                shlex.split(f"exiftool -j -G '{media_file}'"),
+                capture_output=True,
+                check=True,
+                text=True,
+            ).stdout,
+        ),
+    )
+
+
 def get_metadata(media_file: Path) -> dict:
-    with ExifTool() as exif_tool:
-        metadata_src = media_file if not media_file.suffix == ".AAC" else get_matching_video_file_path(media_file)
-        return exif_tool.get_metadata(filename=str(metadata_src))
+    return get_metadata_from_exiftool(
+        media_file=media_file if not media_file.suffix == ".AAC" else get_matching_video_file_path(media_file),
+    )
 
 
 def get_sanitized_file_name(path: Path) -> str:

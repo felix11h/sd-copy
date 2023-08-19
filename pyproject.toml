@@ -6,7 +6,6 @@ authors = ["Felix Hoffmann <felix11h@github.nomail>"]
 
 [tool.poetry.dependencies]
 python = "^3.11"
-PyExifTool = "<0.5"
 click = "*"
 
 [tool.poetry.dev-dependencies]

@@ -136,7 +136,20 @@ def get_rectified_modify_date(metadata: Union[Image, Video], time_offset: int) -
     return metadata.exif_date + metadata.camera.exif_date_timedelta + timedelta(seconds=time_offset)
 
 
-def get_target_path(destination: Path, metadata: Union[Image, Video], rectified_date: datetime) -> Path:
+def get_timestamp_str(date: datetime, metadata: Union[Image, Video], timelapse: bool) -> str:
+    return datetime.strftime(
+        date,
+        f"%Y%m%d-%H%M{'%S' if timelapse and metadata.mime_type in ('image/jpeg', 'image/x-fujifilm-raf') else ''}",
+    )
+
+
+def get_target_path(
+    destination: Path,
+    metadata: Union[Image, Video],
+    rectified_date: datetime,
+    timelapse: bool,
+    timelapse_n: Optional[int] = None,
+) -> Path:
     def get_video_file_name_additions(video: Video) -> Sequence[str]:
         return (f"{video.resolution}-{video.fps}",)
 
@@ -149,9 +162,9 @@ def get_target_path(destination: Path, metadata: Union[Image, Video], rectified_
         / Path(
             "_".join(
                 (
-                    datetime.strftime(rectified_date, "%Y%m%d-%H%M"),
+                    get_timestamp_str(date=rectified_date, metadata=metadata, timelapse=timelapse),
                     metadata.camera.name,
-                    metadata.file_name,
+                    metadata.file_name if not timelapse_n else f"{metadata.file_name}-{timelapse_n:04d}",
                     *(
                         {
                             "image/jpeg": get_image_file_name_additions,
@@ -167,7 +180,12 @@ def get_target_path(destination: Path, metadata: Union[Image, Video], rectified_
     )
 
 
-def get_dcim_transfer_object(media_file: Path, destination: Path, time_offset: int) -> DCIMTransfer:
+def get_dcim_transfer_object(
+    media_file: Path,
+    destination: Path,
+    time_offset: int,
+    timelapse: bool,
+) -> DCIMTransfer:
     logging.info(f"Getting DCIM object for {media_file}")
     metadata = get_image_or_video(media_file=media_file)
     rectified_modify_date = get_rectified_modify_date(metadata=metadata, time_offset=time_offset)
@@ -175,7 +193,12 @@ def get_dcim_transfer_object(media_file: Path, destination: Path, time_offset: i
         source_path=media_file,
         metadata=metadata,
         rectified_modify_date=rectified_modify_date,
-        target_path=get_target_path(destination=destination, metadata=metadata, rectified_date=rectified_modify_date),
+        target_path=get_target_path(
+            destination=destination,
+            metadata=metadata,
+            rectified_date=rectified_modify_date,
+            timelapse=timelapse,
+        ),
     )
 
 
@@ -186,9 +209,19 @@ def is_media_file(file: Path) -> bool:
     return True
 
 
-def get_dcim_transfers(source_path: Path, destination_path: Path, time_offset: int) -> Sequence[DCIMTransfer]:
+def get_dcim_transfers(
+    source_path: Path,
+    destination_path: Path,
+    time_offset: int,
+    timelapse: bool,
+) -> Sequence[DCIMTransfer]:
     return tuple(
-        get_dcim_transfer_object(media_file=file, destination=destination_path, time_offset=time_offset)
+        get_dcim_transfer_object(
+            media_file=file,
+            destination=destination_path,
+            time_offset=time_offset,
+            timelapse=timelapse,
+        )
         for file in source_path.rglob("*")
         if is_media_file(file)
     )

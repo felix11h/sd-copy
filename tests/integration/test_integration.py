@@ -1,5 +1,6 @@
 import json
 import os
+import shutil
 import subprocess
 from distutils.dir_util import copy_tree
 from pathlib import Path
@@ -78,6 +79,29 @@ class TestSdCopy(TestCase):
         _run_process(f"sd-copy {self.dji_oa_dcim_location.name} {self.output_location.name}")
         self.assertFalse(_folder_empty(output_location_subfolder))
 
+    def test_timelapse_with_videos_raises_unexpected_data_error(self):
+        self.assertRaises(
+            subprocess.CalledProcessError,
+            _run_process,
+            f"sd-copy --timelapse {self.dji_oa_dcim_location.name} {self.output_location.name}",
+        )
+
+    def test_timelapse_mode_with_images_only(self):
+        timelapse_input_location = TemporaryDirectory()
+        for img in ("DSCF0226.JPG", "DSCF0227.JPG"):
+            shutil.copy2(Path(self.fuji_dcim_location.name) / img, Path(timelapse_input_location.name) / img)
+        _run_process(f"sd-copy --timelapse {timelapse_input_location.name} {self.output_location.name}")
+
+    def test_timelapse_raises_error_for_images_with_non_matching_intervals(self):
+        timelapse_input_location = TemporaryDirectory()
+        for img in ("DSCF0226.JPG", "DSCF0227.JPG", "DSCF0228.JPG"):
+            shutil.copy2(Path(self.fuji_dcim_location.name) / img, Path(timelapse_input_location.name) / img)
+        self.assertRaises(
+            subprocess.CalledProcessError,
+            _run_process,
+            f"sd-copy --timelapse {timelapse_input_location.name} {self.output_location.name}",
+        )
+
 
 class TestGetImageOrVideo(TestCase):
     def test_fujifilm_get_image_or_video(self):
@@ -105,6 +129,7 @@ class TestGetDcimTransfers(TestCase):
             source_path=Path("dcim/100MEDIA"),
             destination_path=Path("/tmp"),
             time_offset=0,
+            timelapse=False,
         )
         for input_path, expected_output_path in self.input_output_map.items():
             (transfer,) = tuple(

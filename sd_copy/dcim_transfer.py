@@ -11,7 +11,7 @@ from pathlib import Path
 from typing import Any, Callable, Optional, Sequence, Union
 
 from sd_copy.cameras import Camera, dji_osmo_action_photo_camera, dji_osmo_action_video_camera, fujifilm_x_t3
-from sd_copy.utils import UnexpectedDataError, get_datetime_from_str, get_single_value
+from sd_copy.utils import TimestampConsistencyError, UnexpectedDataError, get_datetime_from_str, get_single_value
 
 
 class Extension(Enum):
@@ -255,11 +255,14 @@ def write_json_to_file(dcim_transfers: Sequence[DCIMTransfer], file_name: str):
     )
 
 
-def assert_target_sorting_matches_source(dcim_transfers: Sequence[DCIMTransfer], exclude: Optional[Extension]):
+def check_target_sorting_matches_source(dcim_transfers: Sequence[DCIMTransfer], exclude: Optional[Extension]):
     sorted_by_source = get_sorted_transfers(dcim_transfers, sort_key=attrgetter("source_path"), exclude=exclude)
     sorted_by_target = get_sorted_transfers(dcim_transfers, sort_key=attrgetter("target_path"), exclude=exclude)
 
     if sorted_by_source != sorted_by_target:
         write_json_to_file(sorted_by_target, "sorted_by_target")
         write_json_to_file(sorted_by_source, "sorted_by_source")
-        raise AssertionError
+        raise TimestampConsistencyError(
+            "Unexpected changes in sorting between source and target, likely due to incorrect timestamp. "
+            "Output written to 'sorted_by_source.json' and 'sorted_by_target.json'",
+        )

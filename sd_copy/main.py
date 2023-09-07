@@ -6,7 +6,7 @@ from pathlib import Path
 
 import click
 
-from sd_copy.dcim_transfer import Extension, assert_target_sorting_matches_source, get_dcim_transfers
+from sd_copy.dcim_transfer import Extension, check_target_sorting_matches_source, get_dcim_transfers
 from sd_copy.timelapse import check_timelapse_consistency, patch_dcim_transfers_target_path
 from sd_copy.utils import CopyError, check_if_exiftool_installed, get_checksum
 
@@ -65,8 +65,8 @@ def main(src: Path, dst: Path, time_offset: int, timelapse: bool, dry_run: bool,
     #   [target path]
     #   ├── 20210708-174028_x-t3_DSCF0231_4416x2944.raf
     #   ├── 20210708-174028_x-t3_DSCF0231_6240x4160.jpg
-    assert_target_sorting_matches_source(dcim_transfers=dcim_transfers, exclude=Extension.jpg)
-    assert_target_sorting_matches_source(dcim_transfers=dcim_transfers, exclude=Extension.raf)
+    check_target_sorting_matches_source(dcim_transfers=dcim_transfers, exclude=Extension.jpg)
+    check_target_sorting_matches_source(dcim_transfers=dcim_transfers, exclude=Extension.raf)
 
     for dcim_transfer in dcim_transfers:
         if not dry_run:

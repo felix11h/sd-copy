@@ -15,6 +15,10 @@ class MissingDependencyError(RuntimeError):
     """Raise when dependencies are missing"""
 
 
+class TimestampConsistencyError(Exception):
+    pass
+
+
 class NonSingleValueError(Exception):
     pass
 

@@ -12,6 +12,7 @@ from sd_copy.dcim_transfer import Image, Video, get_dcim_transfers, get_image_or
 DATA = "dcim"
 FUJIFILM_DCIM = os.path.join(DATA, "100_Fuji")
 DJI_OA_DCIM = os.path.join(DATA, "100MEDIA")
+SD_COPY_TRANSFER_CMD = "sd-copy sort"
 
 
 def _run_process(command: str):
@@ -29,7 +30,7 @@ def _number_of_files(dir_path: str) -> int:
     return len(tuple(path for path in Path(dir_path).rglob("*") if path.is_file()))
 
 
-class TestSdCopy(TestCase):
+class TestSdCopySort(TestCase):
     def setUp(self):
         """Called for every test method. If this gets too much, use classmethod setUpClass instead."""
 
@@ -49,48 +50,48 @@ class TestSdCopy(TestCase):
         self.dji_oa_dcim_location.cleanup()
         self.output_location.cleanup()
 
-    def test_running_sd_copy_with_dry_run_does_not_copy_files(self):
+    def test_running_sd_copy_sort_with_dry_run_does_not_copy_files(self):
         self.assertTrue(_folder_empty(path=self.output_location.name))
-        _run_process(f"sd-copy {self.fuji_dcim_location.name} {self.output_location.name} --dry-run")
+        _run_process(f"{SD_COPY_TRANSFER_CMD} {self.fuji_dcim_location.name} {self.output_location.name} --dry-run")
         self.assertTrue(_folder_empty(path=self.output_location.name))
 
-    def test_running_sd_copy_on_fujifilm_test_files_copies_expected_files(self):
+    def test_running_sd_copy_sort_on_fujifilm_test_files_copies_expected_files(self):
         self.assertTrue(_folder_empty(path=self.output_location.name))
-        _run_process(f"sd-copy {self.fuji_dcim_location.name} {self.output_location.name}")
+        _run_process(f"{SD_COPY_TRANSFER_CMD} {self.fuji_dcim_location.name} {self.output_location.name}")
         self.assertEqual(
             _number_of_files(self.output_location.name),
             _number_of_files(self.fuji_dcim_location.name),
         )
 
-    def test_runnning_sd_copy_on_dji_test_files_copies_expected_files(self):
+    def test_runnning_sd_copy_sort_on_dji_test_files_copies_expected_files(self):
         self.assertTrue(_folder_empty(path=self.output_location.name))
-        _run_process(f"sd-copy {self.dji_oa_dcim_location.name} {self.output_location.name}")
+        _run_process(f"{SD_COPY_TRANSFER_CMD} {self.dji_oa_dcim_location.name} {self.output_location.name}")
         hidden_files = ("._DJI_0373.MOV",)
         self.assertEqual(
             _number_of_files(self.output_location.name),
             _number_of_files(self.dji_oa_dcim_location.name) - len(hidden_files),
         )
 
-    def test_sd_copy_handles_existing_output_locations_correctly(self):
+    def test_sd_copy_sort_handles_existing_output_locations_correctly(self):
         self.assertTrue(_folder_empty(path=self.output_location.name))
         output_location_subfolder = os.path.join(self.output_location.name, "2021-09-14")
         os.mkdir(output_location_subfolder)
         self.assertTrue(_folder_empty(output_location_subfolder))
-        _run_process(f"sd-copy {self.dji_oa_dcim_location.name} {self.output_location.name}")
+        _run_process(f"{SD_COPY_TRANSFER_CMD} {self.dji_oa_dcim_location.name} {self.output_location.name}")
         self.assertFalse(_folder_empty(output_location_subfolder))
 
     def test_timelapse_with_videos_raises_unexpected_data_error(self):
         self.assertRaises(
             subprocess.CalledProcessError,
             _run_process,
-            f"sd-copy --timelapse {self.dji_oa_dcim_location.name} {self.output_location.name}",
+            f"{SD_COPY_TRANSFER_CMD} --timelapse {self.dji_oa_dcim_location.name} {self.output_location.name}",
         )
 
     def test_timelapse_mode_with_images_only(self):
         timelapse_input_location = TemporaryDirectory()
         for img in ("DSCF0226.JPG", "DSCF0227.JPG"):
             shutil.copy2(Path(self.fuji_dcim_location.name) / img, Path(timelapse_input_location.name) / img)
-        _run_process(f"sd-copy --timelapse {timelapse_input_location.name} {self.output_location.name}")
+        _run_process(f"{SD_COPY_TRANSFER_CMD} --timelapse {timelapse_input_location.name} {self.output_location.name}")
 
     def test_timelapse_raises_error_for_images_with_non_matching_intervals(self):
         timelapse_input_location = TemporaryDirectory()
@@ -99,7 +100,7 @@ class TestSdCopy(TestCase):
         self.assertRaises(
             subprocess.CalledProcessError,
             _run_process,
-            f"sd-copy --timelapse {timelapse_input_location.name} {self.output_location.name}",
+            f"{SD_COPY_TRANSFER_CMD} --timelapse {timelapse_input_location.name} {self.output_location.name}",
         )
 
 

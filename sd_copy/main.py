@@ -29,7 +29,12 @@ def remove_source_file(source_path: Path):
     pass
 
 
-@click.command()
+@click.group()
+def main():
+    pass
+
+
+@main.command("sort")
 @click.argument("src", type=click.Path(exists=True, path_type=Path))
 @click.argument("dst", type=click.Path(exists=True, path_type=Path))
 @click.option("--time-offset", "-td", default=0, type=int, help=TIME_OFFSET_HELP)
@@ -37,7 +42,7 @@ def remove_source_file(source_path: Path):
 @click.option("--dry-run", "-n", default=False, is_flag=True)
 @click.option("--delete", "-d", default=False, is_flag=True)
 @click.option("--debug", "-v", default=False, is_flag=True)
-def main(src: Path, dst: Path, time_offset: int, timelapse: bool, dry_run: bool, delete: bool, debug: bool):
+def sort_dcim(src: Path, dst: Path, time_offset: int, timelapse: bool, dry_run: bool, delete: bool, debug: bool):
     logging.basicConfig(
         level=logging.DEBUG if debug else logging.INFO,
         format="%(levelname)s: %(message)s" if debug else "%(message)s",

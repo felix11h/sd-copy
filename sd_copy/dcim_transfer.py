@@ -246,6 +246,7 @@ def write_json_to_file(dcim_transfers: Sequence[DCIMTransfer], file_name: str):
             tuple(
                 {
                     "file": str(dcim_transfer.source_path),
+                    "target": dcim_transfer.target_path.name,
                     "rectified_timestamp": str(dcim_transfer.rectified_modify_date),
                 }
                 for dcim_transfer in dcim_transfers

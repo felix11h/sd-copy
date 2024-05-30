@@ -65,6 +65,7 @@ def main(src: Path, dst: Path, time_offset: int, timelapse: bool, dry_run: bool,
     #   [target path]
     #   ├── 20210708-174028_x-t3_DSCF0231_4416x2944.raf
     #   ├── 20210708-174028_x-t3_DSCF0231_6240x4160.jpg
+    # If sorting does not match the source, this may point to camera recording errors, or issues with this program
     check_target_sorting_matches_source(dcim_transfers=dcim_transfers, exclude=Extension.jpg)
     check_target_sorting_matches_source(dcim_transfers=dcim_transfers, exclude=Extension.raf)
 

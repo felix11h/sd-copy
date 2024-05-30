@@ -11,6 +11,7 @@ from pathlib import Path
 from typing import Any, Callable, Optional, Sequence, Union
 
 from sd_copy.cameras import Camera, dji_osmo_action_photo_camera, dji_osmo_action_video_camera, fujifilm_x_t3
+from sd_copy.files import is_media_file
 from sd_copy.utils import TimestampConsistencyError, UnexpectedDataError, get_datetime_from_str, get_single_value
 
 
@@ -200,13 +201,6 @@ def get_dcim_transfer_object(
             timelapse=timelapse,
         ),
     )
-
-
-def is_media_file(file: Path) -> bool:
-    if file.stem.startswith("._"):
-        logging.warning(f"Found non-media file {file.name}, skipping.")
-        return False
-    return True
 
 
 def get_dcim_transfers(

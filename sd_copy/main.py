@@ -6,7 +6,8 @@ from pathlib import Path
 
 import click
 
-from sd_copy.dcim_transfer import Extension, check_target_sorting_matches_source, get_dcim_transfers
+from sd_copy.dcim_transfer import Extension, check_target_sorting_matches_source, get_dcim_transfers, is_media_file
+from sd_copy.files import get_files_not_sorted
 from sd_copy.timelapse import check_timelapse_consistency, patch_dcim_transfers_target_path
 from sd_copy.utils import CopyError, check_if_exiftool_installed, get_checksum
 
@@ -32,6 +33,24 @@ def remove_source_file(source_path: Path):
 @click.group()
 def main():
     pass
+
+
+@main.command("check-sorted")
+@click.argument("src", type=click.Path(exists=True, path_type=Path))
+@click.argument("dst", type=click.Path(exists=True, path_type=Path))
+def check_sorted_dcim(src: Path, dst: Path):
+    """Use original filename to check if a file has been sorted.
+    For example, a file DCSF1234.MOV is sorted as 20240101-1200_x-t3_DCSF1234_[...].mov"""
+    click.secho("Note: Timelapse photos are not supported as they do not contain the original filename", fg="blue")
+    click.secho("Checking files ... ", nl=False)
+
+    sorted_files = tuple(file for file in dst.rglob("*") if is_media_file(file))
+
+    if unsorted_files := get_files_not_sorted(files_to_check=tuple(src.rglob("*")), sorted_files=sorted_files):
+        click.secho("Unsorted files found!", fg="red")
+        click.secho("\n".join(unsorted_files))
+    else:
+        click.secho("Ok! All files already sorted!", fg="green")
 
 
 @main.command("sort")

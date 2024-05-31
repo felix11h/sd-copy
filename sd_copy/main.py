@@ -1,13 +1,17 @@
 import logging
-import os
-import shutil
-from datetime import datetime
 from pathlib import Path
 
 import click
 
 from sd_copy.dcim_transfer import Extension, check_target_sorting_matches_source, get_dcim_transfers, is_media_file
-from sd_copy.files import get_files_not_sorted
+from sd_copy.files import (
+    copy_media_to_target,
+    get_files_not_sorted,
+    get_rename_operations,
+    get_top_level_folders,
+    remove_source_file,
+    update_file_modify_date,
+)
 from sd_copy.timelapse import check_timelapse_consistency, patch_dcim_transfers_target_path
 from sd_copy.utils import CopyError, check_if_exiftool_installed, get_checksum
 
@@ -17,30 +21,34 @@ TIME_OFFSET_HELP = (
 )
 
 
-def copy_media_to_target(source_path: Path, target_path: Path):
-    target_path.parent.mkdir(parents=True, exist_ok=True)
-    shutil.copy2(src=source_path, dst=target_path)  # copy2 also copies metadata (such as modified date)
-
-
-def update_file_modify_date(file_path: Path, rectified_modify_date: datetime):
-    os.utime(path=file_path, times=(rectified_modify_date.timestamp(), rectified_modify_date.timestamp()))
-
-
-def remove_source_file(source_path: Path):
-    pass
-
-
 @click.group()
 def main():
     pass
+
+
+@main.command("rename-before-sync")
+@click.argument("src", type=click.Path(exists=True, path_type=Path))
+@click.argument("dst", type=click.Path(exists=True, path_type=Path))
+@click.option("--no-dry-run", default=False, is_flag=True)
+def rename_before_sync(src: Path, dst: Path, no_dry_run: bool):
+    """Rsync doesn't detect folder renaming, but this is still quite common in my library for now. Rename folders in
+    a synced library to match the source library, in order to skip unnecessary delete and copy operations"""
+    for rename_operation in get_rename_operations(
+        source_folders=get_top_level_folders(path=src),
+        target_folders=get_top_level_folders(path=dst),
+    ):
+        click.secho(f"Renaming\nFROM:'{rename_operation.old_path}'\nTO  :'{rename_operation.new_path}'")
+        if no_dry_run:
+            rename_operation.old_path.rename(rename_operation.new_path)
+        click.secho("OK" if no_dry_run else "OK (Dry run)", fg="green")
 
 
 @main.command("check-sorted")
 @click.argument("src", type=click.Path(exists=True, path_type=Path))
 @click.argument("dst", type=click.Path(exists=True, path_type=Path))
 def check_sorted_dcim(src: Path, dst: Path):
-    """Use original filename to check if a file has been sorted.
-    For example, a file DCSF1234.MOV is sorted as 20240101-1200_x-t3_DCSF1234_[...].mov"""
+    """Use original filename to check if a file has been sorted. For example, a file DCSF1234.MOV is sorted to
+    a new filename 20240101-1200_x-t3_DCSF1234_[...].mov, which contains the 'DCSF1234' part."""
     click.secho("Note: Timelapse photos are not supported as they do not contain the original filename", fg="blue")
     click.secho("Checking files ... ", nl=False)
 

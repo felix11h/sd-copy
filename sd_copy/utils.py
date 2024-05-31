@@ -2,7 +2,7 @@ import shutil
 from datetime import datetime
 from hashlib import md5
 from pathlib import Path
-from typing import Collection, T
+from typing import Collection, Optional, T
 
 CHUNK_SIZE = 8192
 
@@ -42,6 +42,15 @@ def get_single_value(values: Collection[T]) -> T:
     except ValueError as e:
         raise NonSingleValueError(f"Single element expected, found: {values}") from e
     return value
+
+
+def get_optional_single_value(values: Collection[T]) -> Optional[T]:
+    if values:
+        try:
+            (value,) = values
+        except ValueError as e:
+            raise NonSingleValueError(f"Single element expected, found: {values}") from e
+        return value
 
 
 def get_checksum(file: Path) -> str:

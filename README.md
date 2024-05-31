@@ -10,7 +10,7 @@ Sd-copy moves DCIM files from an SD card and sorts them according to metadata in
 
 Executing sd-copy via
 ```shell
-sd-copy [source path] [output path]
+sd-copy sort [source path] [output path]
 ```
 a DCIM folder structure in `[source path]` such as
 ```shell

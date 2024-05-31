@@ -11,6 +11,7 @@ from pathlib import Path
 from typing import Any, Callable, Optional, Sequence, Union
 
 from sd_copy.cameras import Camera, dji_osmo_action_photo_camera, dji_osmo_action_video_camera, fujifilm_x_t3
+from sd_copy.files import is_media_file
 from sd_copy.utils import TimestampConsistencyError, UnexpectedDataError, get_datetime_from_str, get_single_value
 
 
@@ -202,13 +203,6 @@ def get_dcim_transfer_object(
     )
 
 
-def is_media_file(file: Path) -> bool:
-    if file.stem.startswith("._"):
-        logging.warning(f"Found non-media file {file.name}, skipping.")
-        return False
-    return True
-
-
 def get_dcim_transfers(
     source_path: Path,
     destination_path: Path,
@@ -246,6 +240,7 @@ def write_json_to_file(dcim_transfers: Sequence[DCIMTransfer], file_name: str):
             tuple(
                 {
                     "file": str(dcim_transfer.source_path),
+                    "target": dcim_transfer.target_path.name,
                     "rectified_timestamp": str(dcim_transfer.rectified_modify_date),
                 }
                 for dcim_transfer in dcim_transfers

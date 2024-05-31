@@ -6,7 +6,8 @@ from pathlib import Path
 
 import click
 
-from sd_copy.dcim_transfer import Extension, check_target_sorting_matches_source, get_dcim_transfers
+from sd_copy.dcim_transfer import Extension, check_target_sorting_matches_source, get_dcim_transfers, is_media_file
+from sd_copy.files import get_files_not_sorted
 from sd_copy.timelapse import check_timelapse_consistency, patch_dcim_transfers_target_path
 from sd_copy.utils import CopyError, check_if_exiftool_installed, get_checksum
 
@@ -29,7 +30,30 @@ def remove_source_file(source_path: Path):
     pass
 
 
-@click.command()
+@click.group()
+def main():
+    pass
+
+
+@main.command("check-sorted")
+@click.argument("src", type=click.Path(exists=True, path_type=Path))
+@click.argument("dst", type=click.Path(exists=True, path_type=Path))
+def check_sorted_dcim(src: Path, dst: Path):
+    """Use original filename to check if a file has been sorted.
+    For example, a file DCSF1234.MOV is sorted as 20240101-1200_x-t3_DCSF1234_[...].mov"""
+    click.secho("Note: Timelapse photos are not supported as they do not contain the original filename", fg="blue")
+    click.secho("Checking files ... ", nl=False)
+
+    sorted_files = tuple(file for file in dst.rglob("*") if is_media_file(file))
+
+    if unsorted_files := get_files_not_sorted(files_to_check=tuple(src.rglob("*")), sorted_files=sorted_files):
+        click.secho("Unsorted files found!", fg="red")
+        click.secho("\n".join(unsorted_files))
+    else:
+        click.secho("Ok! All files already sorted!", fg="green")
+
+
+@main.command("sort")
 @click.argument("src", type=click.Path(exists=True, path_type=Path))
 @click.argument("dst", type=click.Path(exists=True, path_type=Path))
 @click.option("--time-offset", "-td", default=0, type=int, help=TIME_OFFSET_HELP)
@@ -37,7 +61,7 @@ def remove_source_file(source_path: Path):
 @click.option("--dry-run", "-n", default=False, is_flag=True)
 @click.option("--delete", "-d", default=False, is_flag=True)
 @click.option("--debug", "-v", default=False, is_flag=True)
-def main(src: Path, dst: Path, time_offset: int, timelapse: bool, dry_run: bool, delete: bool, debug: bool):
+def sort_dcim(src: Path, dst: Path, time_offset: int, timelapse: bool, dry_run: bool, delete: bool, debug: bool):
     logging.basicConfig(
         level=logging.DEBUG if debug else logging.INFO,
         format="%(levelname)s: %(message)s" if debug else "%(message)s",
@@ -65,6 +89,7 @@ def main(src: Path, dst: Path, time_offset: int, timelapse: bool, dry_run: bool,
     #   [target path]
     #   ├── 20210708-174028_x-t3_DSCF0231_4416x2944.raf
     #   ├── 20210708-174028_x-t3_DSCF0231_6240x4160.jpg
+    # If sorting does not match the source, this may point to camera recording errors, or issues with this program
     check_target_sorting_matches_source(dcim_transfers=dcim_transfers, exclude=Extension.jpg)
     check_target_sorting_matches_source(dcim_transfers=dcim_transfers, exclude=Extension.raf)
 

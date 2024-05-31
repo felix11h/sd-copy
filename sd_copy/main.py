@@ -1,13 +1,10 @@
 import logging
-import os
-import shutil
-from datetime import datetime
 from pathlib import Path
 
 import click
 
 from sd_copy.dcim_transfer import Extension, check_target_sorting_matches_source, get_dcim_transfers, is_media_file
-from sd_copy.files import get_files_not_sorted
+from sd_copy.files import copy_media_to_target, get_files_not_sorted, remove_source_file, update_file_modify_date
 from sd_copy.timelapse import check_timelapse_consistency, patch_dcim_transfers_target_path
 from sd_copy.utils import CopyError, check_if_exiftool_installed, get_checksum
 
@@ -15,19 +12,6 @@ TIME_OFFSET_HELP = (
     "Timedelta in seconds to add to the modification date. Determine for example via "
     "`(datetime.strptime(desired_date, format) - datetime.strptime(recorded_date, format)).total_seconds()`."
 )
-
-
-def copy_media_to_target(source_path: Path, target_path: Path):
-    target_path.parent.mkdir(parents=True, exist_ok=True)
-    shutil.copy2(src=source_path, dst=target_path)  # copy2 also copies metadata (such as modified date)
-
-
-def update_file_modify_date(file_path: Path, rectified_modify_date: datetime):
-    os.utime(path=file_path, times=(rectified_modify_date.timestamp(), rectified_modify_date.timestamp()))
-
-
-def remove_source_file(source_path: Path):
-    pass
 
 
 @click.group()
@@ -39,8 +23,8 @@ def main():
 @click.argument("src", type=click.Path(exists=True, path_type=Path))
 @click.argument("dst", type=click.Path(exists=True, path_type=Path))
 def check_sorted_dcim(src: Path, dst: Path):
-    """Use original filename to check if a file has been sorted.
-    For example, a file DCSF1234.MOV is sorted as 20240101-1200_x-t3_DCSF1234_[...].mov"""
+    """Use original filename to check if a file has been sorted. For example, a file DCSF1234.MOV is sorted to
+    a new filename 20240101-1200_x-t3_DCSF1234_[...].mov, which contains the 'DCSF1234' part."""
     click.secho("Note: Timelapse photos are not supported as they do not contain the original filename", fg="blue")
     click.secho("Checking files ... ", nl=False)
 

@@ -78,7 +78,7 @@ def get_matching_video_file_path(media_file) -> Path:
     return Path(matching_video_file)
 
 
-def get_metadata_from_exiftool(media_file: Path) -> dict:
+def get_metadata_from_exiftool(media_file: Path) -> dict[str, str | int | float]:
     return get_single_value(
         json.loads(
             subprocess.run(

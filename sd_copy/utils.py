@@ -7,12 +7,12 @@ from typing import Collection, Optional, T
 CHUNK_SIZE = 8192
 
 
-class UnexpectedDataError(ValueError):
-    """Raise when input data presents a case not yet handled."""
+class UnexpectedDataError(Exception):
+    pass
 
 
-class MissingDependencyError(RuntimeError):
-    """Raise when dependencies are missing"""
+class MissingDependencyError(Exception):
+    pass
 
 
 class TimestampConsistencyError(Exception):
@@ -46,11 +46,7 @@ def get_single_value(values: Collection[T]) -> T:
 
 def get_optional_single_value(values: Collection[T]) -> Optional[T]:
     if values:
-        try:
-            (value,) = values
-        except ValueError as e:
-            raise NonSingleValueError(f"Single element expected, found: {values}") from e
-        return value
+        return get_single_value(values)
 
 
 def get_checksum(file: Path) -> str:

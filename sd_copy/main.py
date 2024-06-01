@@ -1,9 +1,16 @@
+import json
 import logging
 from pathlib import Path
 
 import click
 
-from sd_copy.dcim_transfer import Extension, check_target_sorting_matches_source, get_dcim_transfers, is_media_file
+from sd_copy.dcim_transfer import (
+    Extension,
+    check_target_sorting_matches_source,
+    get_dcim_transfers,
+    get_metadata_from_exiftool,
+    is_media_file,
+)
 from sd_copy.files import (
     copy_media_to_target,
     get_files_not_sorted,
@@ -24,6 +31,12 @@ TIME_OFFSET_HELP = (
 @click.group()
 def main():
     pass
+
+
+@main.command("info")
+@click.argument("media_file", type=click.Path(exists=True, path_type=Path))
+def get_metadata_info(media_file: Path):
+    click.secho(json.dumps(get_metadata_from_exiftool(media_file=media_file), indent=2))
 
 
 @main.command("rename-before-sync")

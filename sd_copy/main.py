@@ -4,13 +4,8 @@ from pathlib import Path
 
 import click
 
-from sd_copy.dcim_transfer import (
-    Extension,
-    check_target_sorting_matches_source,
-    get_dcim_transfers,
-    get_metadata_from_exiftool,
-    is_media_file,
-)
+from sd_copy.check import check_dcim_transfers
+from sd_copy.dcim_transfer import get_dcim_transfers, get_metadata_from_exiftool, is_media_file
 from sd_copy.files import (
     copy_media_to_target,
     get_files_not_sorted,
@@ -19,7 +14,7 @@ from sd_copy.files import (
     remove_source_file,
     update_file_modify_date,
 )
-from sd_copy.timelapse import check_timelapse_consistency, patch_dcim_transfers_target_path
+from sd_copy.timelapse import patch_dcim_transfers_for_timelapse
 from sd_copy.utils import CopyError, check_if_exiftool_installed, get_checksum
 
 TIME_OFFSET_HELP = (
@@ -89,30 +84,12 @@ def sort_dcim(src: Path, dst: Path, time_offset: int, timelapse: bool, dry_run: 
     )
 
     check_if_exiftool_installed()
-    dcim_transfers = get_dcim_transfers(
-        source_path=src,
-        destination_path=dst,
-        time_offset=time_offset,
-        timelapse=timelapse,
-    )
+    dcim_transfers = get_dcim_transfers(source_path=src, destination_path=dst, time_offset=time_offset)
 
     if timelapse:
-        check_timelapse_consistency(dcim_transfers=dcim_transfers)
-        dcim_transfers = patch_dcim_transfers_target_path(dcim_transfers=dcim_transfers)
+        dcim_transfers = patch_dcim_transfers_for_timelapse(dcim_transfers=dcim_transfers, dry_run=dry_run)
 
-    # Assert that copied files maintain the sorting of the source files. Either raw or compressed images need to
-    # be excluded, as cameras can create them at the same time using the same filename. Depending on metadata included
-    # in the target filename, this can lead to changes in the sorting:
-    #   [source path]
-    #   ├── DSCF0231.JPG
-    #   ├── DSCF0231.RAF
-    # becomes
-    #   [target path]
-    #   ├── 20210708-174028_x-t3_DSCF0231_4416x2944.raf
-    #   ├── 20210708-174028_x-t3_DSCF0231_6240x4160.jpg
-    # If sorting does not match the source, this may point to camera recording errors, or issues with this program
-    check_target_sorting_matches_source(dcim_transfers=dcim_transfers, exclude=Extension.jpg)
-    check_target_sorting_matches_source(dcim_transfers=dcim_transfers, exclude=Extension.raf)
+    check_dcim_transfers(dcim_transfers=dcim_transfers, timelapse=timelapse)
 
     for dcim_transfer in dcim_transfers:
         if not dry_run:

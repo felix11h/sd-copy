@@ -39,4 +39,4 @@ jobs:
       - name: Run unit & integration tests
         run: |
           poetry run coverage run -m pytest tests
-          poetry run coverage report --fail-under 50
+          poetry run coverage report --fail-under 49

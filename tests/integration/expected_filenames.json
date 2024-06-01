@@ -1,6 +1,54 @@
 {
-  "dcim/100MEDIA/DJI_0472.MOV": "/tmp/2035-10-27/20351027-1211_dji-oa_DJI0472_2160p-29.97fps.mov",
-  "dcim/100MEDIA/DJI_0473.JPG": "/tmp/2035-10-27/20351027-1212_dji-oa_DJI0473_4000x2250.jpg",
-  "dcim/100MEDIA/DJI_0474.JPG": "/tmp/2035-10-28/20351028-1213_dji-oa_DJI0474_4000x2250.jpg",
-  "dcim/100MEDIA/DJI_0475.MOV": "/tmp/2035-10-28/20351028-1213_dji-oa_DJI0475_2160p-29.97fps.mov"
+  "100_Fuji": {
+    "dcim/100_Fuji/DSCF0232.MOV": "/tmp/2021-07-08/20210708-1746_x-t3_DSCF0232_1080p-24fps.mov",
+    "dcim/100_Fuji/DSCF0228.RAF": "/tmp/2021-07-08/20210708-1737_x-t3_DSCF0228_4416x2944.raf",
+    "dcim/100_Fuji/DSCF0226.JPG": "/tmp/2021-07-08/20210708-1736_x-t3_DSCF0226_6240x4160.jpg",
+    "dcim/100_Fuji/DSCF0227.JPG": "/tmp/2021-07-08/20210708-1736_x-t3_DSCF0227_6240x4160.jpg",
+    "dcim/100_Fuji/DSCF0230.MOV": "/tmp/2021-07-08/20210708-1740_x-t3_DSCF0230_2160p-59.94fps.mov",
+    "dcim/100_Fuji/DSCF0229.MOV": "/tmp/2021-07-08/20210708-1739_x-t3_DSCF0229_1080p-24fps.mov",
+    "dcim/100_Fuji/DSCF0231.RAF": "/tmp/2021-07-08/20210708-1740_x-t3_DSCF0231_4416x2944.raf",
+    "dcim/100_Fuji/DSCF0228.JPG": "/tmp/2021-07-08/20210708-1737_x-t3_DSCF0228_6240x4160.jpg",
+    "dcim/100_Fuji/DSCF0231.JPG": "/tmp/2021-07-08/20210708-1740_x-t3_DSCF0231_6240x4160.jpg"
+  },
+  "100_Fuji_timelapse": {
+    "20240601-1503_x-t3_DSCF8818-DSCF8821_timelapse_N4_0m_5s_SS0.5.mp4": "/tmp/2024-06-01/20240601-1503_x-t3_DSCF8818-DSCF8821_timelapse_N4_0m_5s_SS0.5.mp4",
+    "dcim/100_Fuji_timelapse/DSCF8818.JPG": "/tmp/2024-06-01/20240601-1503_x-t3_DSCF8818-DSCF8821_timelapse_N4_0m_5s_SS0.5/jpg/20240601-1503_x-t3_DSCF8818-DSCF8821_timelapse_N4_0m_5s_SS0.5_0001.jpg",
+    "dcim/100_Fuji_timelapse/DSCF8818.RAF": "/tmp/2024-06-01/20240601-1503_x-t3_DSCF8818-DSCF8821_timelapse_N4_0m_5s_SS0.5/raw/20240601-1503_x-t3_DSCF8818-DSCF8821_timelapse_N4_0m_5s_SS0.5_0001.raf",
+    "dcim/100_Fuji_timelapse/DSCF8819.JPG": "/tmp/2024-06-01/20240601-1503_x-t3_DSCF8818-DSCF8821_timelapse_N4_0m_5s_SS0.5/jpg/20240601-1503_x-t3_DSCF8818-DSCF8821_timelapse_N4_0m_5s_SS0.5_0002.jpg",
+    "dcim/100_Fuji_timelapse/DSCF8819.RAF": "/tmp/2024-06-01/20240601-1503_x-t3_DSCF8818-DSCF8821_timelapse_N4_0m_5s_SS0.5/raw/20240601-1503_x-t3_DSCF8818-DSCF8821_timelapse_N4_0m_5s_SS0.5_0002.raf",
+    "dcim/100_Fuji_timelapse/DSCF8820.JPG": "/tmp/2024-06-01/20240601-1503_x-t3_DSCF8818-DSCF8821_timelapse_N4_0m_5s_SS0.5/jpg/20240601-1503_x-t3_DSCF8818-DSCF8821_timelapse_N4_0m_5s_SS0.5_0003.jpg",
+    "dcim/100_Fuji_timelapse/DSCF8820.RAF": "/tmp/2024-06-01/20240601-1503_x-t3_DSCF8818-DSCF8821_timelapse_N4_0m_5s_SS0.5/raw/20240601-1503_x-t3_DSCF8818-DSCF8821_timelapse_N4_0m_5s_SS0.5_0003.raf",
+    "dcim/100_Fuji_timelapse/DSCF8821.JPG": "/tmp/2024-06-01/20240601-1503_x-t3_DSCF8818-DSCF8821_timelapse_N4_0m_5s_SS0.5/jpg/20240601-1503_x-t3_DSCF8818-DSCF8821_timelapse_N4_0m_5s_SS0.5_0004.jpg",
+    "dcim/100_Fuji_timelapse/DSCF8821.RAF": "/tmp/2024-06-01/20240601-1503_x-t3_DSCF8818-DSCF8821_timelapse_N4_0m_5s_SS0.5/raw/20240601-1503_x-t3_DSCF8818-DSCF8821_timelapse_N4_0m_5s_SS0.5_0004.raf"
+  },
+  "100_Fuji_timelapse_raw_only": {
+    "dcim/100_Fuji_timelapse_raw_only/DSCF8818.RAF": "/tmp/2024-06-01/20240601-1503_x-t3_DSCF8818-DSCF8819_timelapse_N2_0m_5s_SS0.5/raw/20240601-1503_x-t3_DSCF8818-DSCF8819_timelapse_N2_0m_5s_SS0.5_0001.raf",
+    "dcim/100_Fuji_timelapse_raw_only/DSCF8819.RAF": "/tmp/2024-06-01/20240601-1503_x-t3_DSCF8818-DSCF8819_timelapse_N2_0m_5s_SS0.5/raw/20240601-1503_x-t3_DSCF8818-DSCF8819_timelapse_N2_0m_5s_SS0.5_0002.raf"
+  },
+  "100MEDIA": {
+    "dcim/100MEDIA/DJI_0373.MOV": "/tmp/2021-09-14/20210914-1642_dji-oa_DJI0373_1080p-29.97fps.mov",
+    "dcim/100MEDIA/DJI_0473.JPG": "/tmp/2035-10-27/20351027-1212_dji-oa_DJI0473_4000x2250.jpg",
+    "dcim/100MEDIA/DJI_0375.MOV": "/tmp/2021-09-14/20210914-1643_dji-oa_DJI0375_1080p-29.97fps.mov",
+    "dcim/100MEDIA/DJI_0475.MOV": "/tmp/2035-10-28/20351028-1213_dji-oa_DJI0475_2160p-29.97fps.mov",
+    "dcim/100MEDIA/DJI_0375.AAC": "/tmp/2021-09-14/20210914-1643_dji-oa_DJI0375_1080p-29.97fps.aac",
+    "dcim/100MEDIA/DJI_0377.MP4": "/tmp/2021-09-14/20210914-1643_dji-oa_DJI0377_1530p-29.97fps.mp4",
+    "dcim/100MEDIA/DJI_0474.JPG": "/tmp/2035-10-28/20351028-1213_dji-oa_DJI0474_4000x2250.jpg",
+    "dcim/100MEDIA/DJI_0472.MOV": "/tmp/2035-10-27/20351027-1211_dji-oa_DJI0472_2160p-29.97fps.mov",
+    "dcim/100MEDIA/DJI_0376.JPG": "/tmp/2021-09-14/20210914-1643_dji-oa_DJI0376_4000x2250.jpg"
+  },
+  "100MEDIA_timelapse": {
+    "dcim/100MEDIA_timelapse/DJI_0587.MP4": "/tmp/2024-06-01/20240601-1534_dji-oa_DJI0587_timelapse_N3_0m_8s_SS2.mp4",
+    "dcim/100MEDIA_timelapse/TLPS0001.JPG": "/tmp/2024-06-01/20240601-1534_dji-oa_DJI0587_timelapse_N3_0m_8s_SS2/jpg/20240601-1534_dji-oa_DJI0587_timelapse_N3_0m_8s_SS2_0001.jpg",
+    "dcim/100MEDIA_timelapse/TLPS0002.JPG": "/tmp/2024-06-01/20240601-1534_dji-oa_DJI0587_timelapse_N3_0m_8s_SS2/jpg/20240601-1534_dji-oa_DJI0587_timelapse_N3_0m_8s_SS2_0002.jpg",
+    "dcim/100MEDIA_timelapse/TLPS0003.JPG": "/tmp/2024-06-01/20240601-1534_dji-oa_DJI0587_timelapse_N3_0m_8s_SS2/jpg/20240601-1534_dji-oa_DJI0587_timelapse_N3_0m_8s_SS2_0003.jpg"
+  },
+  "100MEDIA_timed_photo": {
+    "20240601-1552_dji-oa_DJI0593-DJI0595_timelapse_N3_0m_4s_SS1.3.mp4": "/tmp/2024-06-01/20240601-1552_dji-oa_DJI0593-DJI0595_timelapse_N3_0m_4s_SS1.3.mp4",
+    "dcim/100MEDIA_timed_photo/DJI_0593.JPG": "/tmp/2024-06-01/20240601-1552_dji-oa_DJI0593-DJI0595_timelapse_N3_0m_4s_SS1.3/jpg/20240601-1552_dji-oa_DJI0593-DJI0595_timelapse_N3_0m_4s_SS1.3_0001.jpg",
+    "dcim/100MEDIA_timed_photo/DJI_0594.JPG": "/tmp/2024-06-01/20240601-1552_dji-oa_DJI0593-DJI0595_timelapse_N3_0m_4s_SS1.3/jpg/20240601-1552_dji-oa_DJI0593-DJI0595_timelapse_N3_0m_4s_SS1.3_0002.jpg",
+    "dcim/100MEDIA_timed_photo/DJI_0595.JPG": "/tmp/2024-06-01/20240601-1552_dji-oa_DJI0593-DJI0595_timelapse_N3_0m_4s_SS1.3/jpg/20240601-1552_dji-oa_DJI0593-DJI0595_timelapse_N3_0m_4s_SS1.3_0003.jpg",
+    "dcim/100MEDIA_timed_photo/DJI_0593.DNG": "/tmp/2024-06-01/20240601-1552_dji-oa_DJI0593-DJI0595_timelapse_N3_0m_4s_SS1.3/raw/20240601-1552_dji-oa_DJI0593-DJI0595_timelapse_N3_0m_4s_SS1.3_0001.dng",
+    "dcim/100MEDIA_timed_photo/DJI_0594.DNG": "/tmp/2024-06-01/20240601-1552_dji-oa_DJI0593-DJI0595_timelapse_N3_0m_4s_SS1.3/raw/20240601-1552_dji-oa_DJI0593-DJI0595_timelapse_N3_0m_4s_SS1.3_0002.dng",
+    "dcim/100MEDIA_timed_photo/DJI_0595.DNG": "/tmp/2024-06-01/20240601-1552_dji-oa_DJI0593-DJI0595_timelapse_N3_0m_4s_SS1.3/raw/20240601-1552_dji-oa_DJI0593-DJI0595_timelapse_N3_0m_4s_SS1.3_0003.dng"
+  }
 }

@@ -8,11 +8,12 @@ from tempfile import TemporaryDirectory
 from unittest import TestCase
 
 from sd_copy.dcim_transfer import Image, Video, get_dcim_transfers, get_image_or_video
+from sd_copy.timelapse import patch_dcim_transfers_for_timelapse
 
 DATA = "dcim"
 FUJIFILM_DCIM = os.path.join(DATA, "100_Fuji")
 DJI_OA_DCIM = os.path.join(DATA, "100MEDIA")
-SD_COPY_TRANSFER_CMD = "sd-copy sort"
+SD_COPY_TRANSFER_CMD = "poetry run sd-copy sort"
 
 
 def _run_process(command: str):
@@ -87,12 +88,6 @@ class TestSdCopySort(TestCase):
             f"{SD_COPY_TRANSFER_CMD} --timelapse {self.dji_oa_dcim_location.name} {self.output_location.name}",
         )
 
-    def test_timelapse_mode_with_images_only(self):
-        timelapse_input_location = TemporaryDirectory()
-        for img in ("DSCF0226.JPG", "DSCF0227.JPG"):
-            shutil.copy2(Path(self.fuji_dcim_location.name) / img, Path(timelapse_input_location.name) / img)
-        _run_process(f"{SD_COPY_TRANSFER_CMD} --timelapse {timelapse_input_location.name} {self.output_location.name}")
-
     def test_timelapse_raises_error_for_images_with_non_matching_intervals(self):
         timelapse_input_location = TemporaryDirectory()
         for img in ("DSCF0226.JPG", "DSCF0227.JPG", "DSCF0228.JPG"):
@@ -125,15 +120,40 @@ class TestGetDcimTransfers(TestCase):
     def setUp(self):
         self.input_output_map = json.loads(Path("tests/integration/expected_filenames.json").read_text())
 
-    def test_dcim_transfer_has_expected_output_paths(self):
+    def _check_input_output_paths_of_dcim_transfers(self, dcim_dir: str, timelapse: bool):
         dcim_transfers = get_dcim_transfers(
-            source_path=Path("dcim/100MEDIA"),
+            source_path=Path(f"dcim/{dcim_dir}"),
             destination_path=Path("/tmp"),
             time_offset=0,
-            timelapse=False,
         )
-        for input_path, expected_output_path in self.input_output_map.items():
-            (transfer,) = tuple(
-                dcim_transfer for dcim_transfer in dcim_transfers if dcim_transfer.source_path == Path(input_path)
+        if timelapse:
+            dcim_transfers = patch_dcim_transfers_for_timelapse(dcim_transfers, dry_run=True)
+
+        self.assertEqual(
+            tuple(sorted(str(dcim_transfer.source_path) for dcim_transfer in dcim_transfers)),
+            tuple(sorted(str(source_path) for source_path in self.input_output_map[dcim_dir].keys())),
+        )
+
+        for dcim_transfer in dcim_transfers:
+            self.assertEqual(
+                str(dcim_transfer.target_path),
+                self.input_output_map[dcim_dir][str(dcim_transfer.source_path)],
             )
-            self.assertEqual(Path(expected_output_path), transfer.target_path)
+
+    def test_fuji_input_output_paths(self):
+        self._check_input_output_paths_of_dcim_transfers(dcim_dir="100_Fuji", timelapse=False)
+
+    def test_fuji_timelapse_input_output_paths(self):
+        self._check_input_output_paths_of_dcim_transfers(dcim_dir="100_Fuji_timelapse", timelapse=True)
+
+    def test_fuji_timelapse_raw_only_input_output_paths(self):
+        self._check_input_output_paths_of_dcim_transfers(dcim_dir="100_Fuji_timelapse_raw_only", timelapse=True)
+
+    def test_osmo_action_input_output_paths(self):
+        self._check_input_output_paths_of_dcim_transfers(dcim_dir="100MEDIA", timelapse=False)
+
+    def test_osmo_action_timelapse_input_output_paths(self):
+        self._check_input_output_paths_of_dcim_transfers(dcim_dir="100MEDIA_timelapse", timelapse=True)
+
+    def test_osmo_action_timed_photo_input_output_paths(self):
+        self._check_input_output_paths_of_dcim_transfers(dcim_dir="100MEDIA_timed_photo", timelapse=True)

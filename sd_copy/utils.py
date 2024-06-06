@@ -49,7 +49,9 @@ def get_optional_single_value(values: Collection[T]) -> Optional[T]:
         return get_single_value(values)
 
 
-def get_checksum(file: Path) -> str:
+def get_checksum(file: Path, skip: bool = False) -> Optional[str]:
+    if skip:
+        return None
     checksum = md5()
     with file.open(mode="rb") as f:
         while chunk := f.read(CHUNK_SIZE):

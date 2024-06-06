@@ -74,10 +74,20 @@ def check_sorted_dcim(src: Path, dst: Path):
 @click.argument("dst", type=click.Path(exists=True, path_type=Path))
 @click.option("--time-offset", "-td", default=0, type=int, help=TIME_OFFSET_HELP)
 @click.option("--timelapse", default=False, is_flag=True)
+@click.option("--skip-checksum", default=False, is_flag=True)
 @click.option("--dry-run", "-n", default=False, is_flag=True)
 @click.option("--delete", "-d", default=False, is_flag=True)
 @click.option("--debug", "-v", default=False, is_flag=True)
-def sort_dcim(src: Path, dst: Path, time_offset: int, timelapse: bool, dry_run: bool, delete: bool, debug: bool):
+def sort_dcim(
+    src: Path,
+    dst: Path,
+    time_offset: int,
+    timelapse: bool,
+    skip_checksum: bool,
+    dry_run: bool,
+    delete: bool,
+    debug: bool,
+):
     logging.basicConfig(
         level=logging.DEBUG if debug else logging.INFO,
         format="%(levelname)s: %(message)s" if debug else "%(message)s",
@@ -93,7 +103,7 @@ def sort_dcim(src: Path, dst: Path, time_offset: int, timelapse: bool, dry_run: 
 
     for dcim_transfer in dcim_transfers:
         if not dry_run:
-            source_checksum = get_checksum(file=dcim_transfer.source_path)
+            source_checksum = get_checksum(file=dcim_transfer.source_path, skip=skip_checksum)
             click.secho(f"Copying {dcim_transfer.source_path} to {dcim_transfer.target_path} ... ", nl=False)
             copy_media_to_target(source_path=dcim_transfer.source_path, target_path=dcim_transfer.target_path)
             click.secho("OK", fg="green", nl=False)
@@ -102,10 +112,10 @@ def sort_dcim(src: Path, dst: Path, time_offset: int, timelapse: bool, dry_run: 
                 rectified_modify_date=dcim_transfer.rectified_modify_date,
             )
             click.secho("  Checksum ... ", nl=False)
-            target_checksum = get_checksum(file=dcim_transfer.target_path)
+            target_checksum = get_checksum(file=dcim_transfer.target_path, skip=skip_checksum)
             click.secho("OK", fg="green")
             if source_checksum != target_checksum:
-                raise CopyError(f"Target checksum does not match source checksum for {dcim_transfer.source_path.name}")
+                raise CopyError("Target checksum does not match source checksum for {dcim_transfer.source_path.name}")
             if delete:
                 remove_source_file(source_path=dcim_transfer.source_path)
 

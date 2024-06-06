@@ -1,9 +1,11 @@
+import json
 import logging
 from pathlib import Path
 
 import click
 
-from sd_copy.dcim_transfer import Extension, check_target_sorting_matches_source, get_dcim_transfers, is_media_file
+from sd_copy.check import check_dcim_transfers
+from sd_copy.dcim_transfer import get_dcim_transfers, get_metadata_from_exiftool, is_media_file
 from sd_copy.files import (
     copy_media_to_target,
     get_files_not_sorted,
@@ -12,7 +14,7 @@ from sd_copy.files import (
     remove_source_file,
     update_file_modify_date,
 )
-from sd_copy.timelapse import check_timelapse_consistency, patch_dcim_transfers_target_path
+from sd_copy.timelapse import patch_dcim_transfers_for_timelapse
 from sd_copy.utils import CopyError, check_if_exiftool_installed, get_checksum
 
 TIME_OFFSET_HELP = (
@@ -24,6 +26,12 @@ TIME_OFFSET_HELP = (
 @click.group()
 def main():
     pass
+
+
+@main.command("info")
+@click.argument("media_file", type=click.Path(exists=True, path_type=Path))
+def get_metadata_info(media_file: Path):
+    click.secho(json.dumps(get_metadata_from_exiftool(media_file=media_file), indent=2))
 
 
 @main.command("rename-before-sync")
@@ -66,44 +74,36 @@ def check_sorted_dcim(src: Path, dst: Path):
 @click.argument("dst", type=click.Path(exists=True, path_type=Path))
 @click.option("--time-offset", "-td", default=0, type=int, help=TIME_OFFSET_HELP)
 @click.option("--timelapse", default=False, is_flag=True)
+@click.option("--skip-checksum", default=False, is_flag=True)
 @click.option("--dry-run", "-n", default=False, is_flag=True)
 @click.option("--delete", "-d", default=False, is_flag=True)
 @click.option("--debug", "-v", default=False, is_flag=True)
-def sort_dcim(src: Path, dst: Path, time_offset: int, timelapse: bool, dry_run: bool, delete: bool, debug: bool):
+def sort_dcim(
+    src: Path,
+    dst: Path,
+    time_offset: int,
+    timelapse: bool,
+    skip_checksum: bool,
+    dry_run: bool,
+    delete: bool,
+    debug: bool,
+):
     logging.basicConfig(
         level=logging.DEBUG if debug else logging.INFO,
         format="%(levelname)s: %(message)s" if debug else "%(message)s",
     )
 
     check_if_exiftool_installed()
-    dcim_transfers = get_dcim_transfers(
-        source_path=src,
-        destination_path=dst,
-        time_offset=time_offset,
-        timelapse=timelapse,
-    )
+    dcim_transfers = get_dcim_transfers(source_path=src, destination_path=dst, time_offset=time_offset)
 
     if timelapse:
-        check_timelapse_consistency(dcim_transfers=dcim_transfers)
-        dcim_transfers = patch_dcim_transfers_target_path(dcim_transfers=dcim_transfers)
+        dcim_transfers = patch_dcim_transfers_for_timelapse(dcim_transfers=dcim_transfers, dry_run=dry_run)
 
-    # Assert that copied files maintain the sorting of the source files. Either raw or compressed images need to
-    # be excluded, as cameras can create them at the same time using the same filename. Depending on metadata included
-    # in the target filename, this can lead to changes in the sorting:
-    #   [source path]
-    #   ├── DSCF0231.JPG
-    #   ├── DSCF0231.RAF
-    # becomes
-    #   [target path]
-    #   ├── 20210708-174028_x-t3_DSCF0231_4416x2944.raf
-    #   ├── 20210708-174028_x-t3_DSCF0231_6240x4160.jpg
-    # If sorting does not match the source, this may point to camera recording errors, or issues with this program
-    check_target_sorting_matches_source(dcim_transfers=dcim_transfers, exclude=Extension.jpg)
-    check_target_sorting_matches_source(dcim_transfers=dcim_transfers, exclude=Extension.raf)
+    check_dcim_transfers(dcim_transfers=dcim_transfers, timelapse=timelapse)
 
     for dcim_transfer in dcim_transfers:
         if not dry_run:
-            source_checksum = get_checksum(file=dcim_transfer.source_path)
+            source_checksum = get_checksum(file=dcim_transfer.source_path, skip=skip_checksum)
             click.secho(f"Copying {dcim_transfer.source_path} to {dcim_transfer.target_path} ... ", nl=False)
             copy_media_to_target(source_path=dcim_transfer.source_path, target_path=dcim_transfer.target_path)
             click.secho("OK", fg="green", nl=False)
@@ -112,10 +112,10 @@ def sort_dcim(src: Path, dst: Path, time_offset: int, timelapse: bool, dry_run: 
                 rectified_modify_date=dcim_transfer.rectified_modify_date,
             )
             click.secho("  Checksum ... ", nl=False)
-            target_checksum = get_checksum(file=dcim_transfer.target_path)
+            target_checksum = get_checksum(file=dcim_transfer.target_path, skip=skip_checksum)
             click.secho("OK", fg="green")
             if source_checksum != target_checksum:
-                raise CopyError(f"Target checksum does not match source checksum for {dcim_transfer.source_path.name}")
+                raise CopyError("Target checksum does not match source checksum for {dcim_transfer.source_path.name}")
             if delete:
                 remove_source_file(source_path=dcim_transfer.source_path)
 

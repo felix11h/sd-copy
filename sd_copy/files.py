@@ -7,7 +7,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Optional, Sequence
 
-from sd_copy.utils import get_optional_single_value
+from sd_copy.utils import UnexpectedDataError, get_optional_single_value
 
 
 @dataclass
@@ -20,6 +20,8 @@ def is_media_file(file: Path) -> bool:
     if file.stem.startswith("._"):
         logging.warning(f"Found non-media file {file.name}, skipping.")
         return False
+    if file.is_dir():
+        raise UnexpectedDataError("Found subdirectory in SRC path. Sorting subdirectories is currently not supported")
     return True
 
 

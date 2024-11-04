@@ -1,7 +1,5 @@
 
-# Sd-copy
-
-Sd-copy moves DCIM files from an SD card and sorts them according to metadata into a given target folder. The following cameras are supported:
+Sd-copy is a command line tool for copying DCIM files from an SD card and sorting them into a target folder according to metadata. The following cameras are currently supported:
 * Fujifilm X-T3
 * DJI Osmo Action
 
@@ -41,9 +39,9 @@ out/
 
 ### Why write this?
 
-If you're looking for a general purpose tool for moving photos and videos from an SD card, please consider Damon Lynch's much more advanced [Rapid Photo Downloader](https://damonlynch.net/rapid/). In my case, the bug described [here](https://bugs.launchpad.net/rapid/+bug/1814014) and [here](https://bugs.launchpad.net/rapid/+bug/1837327) initially prevented me from using the tool.
+If you're looking for a general purpose tool for moving photos and videos from an SD card, please consider Damon Lynch's [Rapid Photo Downloader](https://damonlynch.net/rapid/). In my case, the bug described [here](https://bugs.launchpad.net/rapid/+bug/1814014) and [here](https://bugs.launchpad.net/rapid/+bug/1837327) initially prevented me from using the tool.
 
-After starting this project I realized that the problems are more severe, both the Fujifilm X-T3 and DJI Osmo Action set incorrect timestamps in either file modification date (X-T3) or the Exif modify date (Osmo Action). In order to have at least one reliable timestamp, I extended this tool to set file modification dates for all copied files explicitly.
+After starting work on this project, I realized that there are problems with the handling of timestamps both in the Fujifilm X-T3 and DJI Osmo Action camera (see [concepts](CONCEPTS.md)). Sd-copy corrects timestamps for media from these cameras where needed. Later, I have added additional features, such as support for timelapses (https://github.com/felix11h/sd-copy/issues/22) and utility file operations (https://github.com/felix11h/sd-copy/pull/21).
 
 
 ## Installation

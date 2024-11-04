@@ -1,17 +1,18 @@
-## Sd-copy usage
+## Concepts
 
-Sorting and copying footage from my cameras adheres to the following principles:
+It is not straightforward to correctly determine when a video or image was taken. Depending on the media type, the camera, and the camera's firmware version, different options are available. There is no one-fits-all solution, and some combinations of camera and media types provide incorrect information due to bugs. After some trial and error, and learning a lot about timestamps, here is how I decided to use metadata:
 
-1. Metadata of recordings (video, image, audio) will **never** be modified
-2. Timestamps in the recording metadata are unreliable and cannot be used
+<br>
 
-<br/>
-    
-> [!IMPORTANT]
-> The following sources are the only reliable timestamps, only these should be used:
+|  | Recording metadata (e.g. EXIF) | Filesystem metadata <br>(date modified, date created) | Filename timestamp <br> (`20241027-1752_[...].mov`)  | 
+| ------------- | ------------- | ------------- | ------------- |
+| Modified by `sd-copy`? |  Never modified | Yes | Yes  |
+| Time zone information |  Depends on camera, firmware<br> version(!), and metadata field | Time zone aware (possibly<br> incorrect) | Time zone unaware, assumes time <br>zone where footage was recorded  |
+| Reliable? |  $\color{red}{\textsf{No ✘}}$ | $\color{red}{\textsf{No ✘}}$ | $\color{green}{\textsf{Yes ✔️}}$ |
 
-- `Datetime string in file name (timezone unaware)`
-- `File modification date (timezone aware)`
+
+<br>
+Some cameras (see below) simply do not support setting a time zone. For this reason, I have decided to primarily use naive timestamps. There are ideas to extend this, but in some cases this would require user input of the correct time zone during sorting (see https://github.com/felix11h/sd-copy/issues/26).
 
 <br/>
 <br/>
@@ -20,67 +21,17 @@ Sorting and copying footage from my cameras adheres to the following principles:
 
 ### DJI Osmo Action
 
-Timestamps in videos created by the DJI Osmo Action camera are incorrect. This is for example reported here, [forum.dji.com](https://forum.dji.com/forum.php?mod=redirect&goto=findpost&ptid=242428&pid=2747596). Depending on the date, a daylight savings time correction is, for example, applied to file modification date. Through testing, I have found out that my camera follows a European daylight savings time schedule.
+The DJI Osmo Action cameras (as of version 4) do not have an option for setting a time zone. Therefore, recorded footage is also lacking this information, and filesystem metadata timestamps are using a camera internal default time zone ([forum.dji.com](https://forum.dji.com/thread-294957-1-1.html)).
 
-There are two timestamp sources to consider – the file modification date and one of the metadata timestamps (e.g. media create date as extracted by ExifTool). I have tested the two timestamps with the following code:
+The naive timestamps found in the EXIF metadata (as parsed by Exiftool) are partially incorrect, see table below. `sd-copy` applies corrections to the timestamp of the recording depending on media type:
 
-```python
-import shlex
-import subprocess
-from datetime import datetime
-from pathlib import Path
+| | metadata timestamp |
+|--------| ------------- |
+| images | correct  |
+| videos | -1 hour  |
 
-for file_path in sorted(Path("dcim/100MEDIA").rglob("DJI*.MOV")):
-    print(file_path)
-    print(datetime.fromtimestamp(file_path.stat().st_mtime))
-    subprocess.run(shlex.split(f"exiftool -T -mediacreatedate {file_path}"), check=True)
-```
+<br>
 
-With this I have analyzed two videos recorded in summer time (until October 27 in 2025) and winter time (starting from October 28 in 2035):
-```shell
-dcim/100MEDIA/DJI_0472.MOV
-2035:10:27 12:11:58     correct date
-2035-10-27 12:12:10     file modified date
-2035:10:27 11:11:58     metadata timestamp
+### Fujifilm X-T3
 
-dcim/100MEDIA/DJI_0475.MOV
-2035:10:28 12:13:08     correct date
-2035-10-28 11:13:19     file modified date
-2035:10:28 11:13:08     metadata timestamp
-```
-In words, while the file modified date can be off by 1 hour depending on the current data, the metadata timestamp is **always** off by 1 hour.
-
-For photos, on the other hand, while file modified dates have the same issue as videos, metadata timestamps are always reported correctly.
-
-```shell
-dcim/100MEDIA/DJI_0473.JPG
-2035:10:27 12:12:20     correct date
-2035-10-27 12:12:21     file modified date
-2035:10:27 12:12:20     metadata timestamp
-
-
-dcim/100MEDIA/DJI_0474.JPG
-2035:10:28 12:13:07     correct date
-2035-10-28 11:13:08     file modified date
-2035:10:28 12:13:07     metadata timestamp
-```
-
-In summary, the following tables describe the correctness of timestamps the DJI Osmo Action:
-
-#### Video
-| | file modified date  | metadata timestamp |
-|--------| ------------- | ------------- |
-| Summer time | correct  | -1 hour  |
-| Winter time | -1 hour  | -1 hour  |
-
-
-#### Image
-
-| | file modified date  | metadata timestamp |
-|--------| ------------- | ------------- |
-| Summer time | correct  | correct  |
-| Winter time | -1 hour  | correct  |
-
-<br/>
-
-Taken all of this together, `sd-copy` operates as follows. The metadata timestamp is used as a source for both video and images, but only for video the timestamp is corrected by 1 hour. The file modified date is then set correctly to this timestamp. 
+The Fujifilm X-T3 camera was released in 2018. Only with firmware version 5.00, from May 2023, support for setting the camera's time zone was added ([fujifilm-x.com](https://fujifilm-x.com/en-gb/support/download/firmware/cameras/x-t3/)). With this, full support for time zone aware timestamps is possible, however, it is at the moment not implemented (see https://github.com/felix11h/sd-copy/issues/26).

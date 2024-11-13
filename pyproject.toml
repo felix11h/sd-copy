@@ -5,9 +5,9 @@ description = ""
 authors = ["Felix Hoffmann <felix11h@github.nomail>"]
 
 [tool.poetry.dependencies]
-python = "^3.11"
-click = "*"
-more_itertools = "*"
+python = ">=3.11"
+click = ">=8.0.0"
+more_itertools = ">=10.0.0"
 
 [tool.poetry.dev-dependencies]
 pytest = "*"

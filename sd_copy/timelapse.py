@@ -17,6 +17,8 @@ from sd_copy.utils import UnexpectedDataError, get_optional_single_value, get_si
 TIMELAPSE_PROXY_SUFFIX = Extension.mp4
 TIMELAPSE_PROXY_FPS = 24
 
+TIMEDELTA_THRESHOLD = 4  # seconds
+
 
 @dataclass
 class TimelapseSpec:
@@ -91,14 +93,15 @@ def compute_timedelta(sorted_dcim_transfers: Sequence) -> int:
         for next_image, image in zip(sorted_dcim_transfers[1:], sorted_dcim_transfers[:-1])
     )
 
-    if (max(timedeltas) - min(timedeltas)) > 2:
+    if (max(timedeltas) - min(timedeltas)) > TIMEDELTA_THRESHOLD:
         raise UnexpectedDataError(
             "Images interval unexpected, timelapse might need to be split up:"
             "\n\t".join(
                 tuple(
-                    f"{next_image.source_path.name} -> {image.source_path.name}: "
-                    f"dt={(next_image.rectified_modify_date-image.rectified_modify_date).total_seconds()}s"
+                    f"{next_image.source_path.name} -> {image.source_path.name}: " f"dt={dt_seconds}s"
                     for next_image, image in zip(sorted_dcim_transfers[1:], sorted_dcim_transfers[:-1])
+                    if (dt_seconds := (next_image.rectified_modify_date - image.rectified_modify_date).total_seconds())
+                    > TIMEDELTA_THRESHOLD
                 ),
             ),
         )

@@ -1,9 +1,10 @@
+from datetime import datetime
 from pathlib import Path
 from unittest import TestCase
 from unittest.mock import patch
 
-from sd_copy.cameras import dji_osmo_action_photo_camera, dji_osmo_action_video_camera, fujifilm_x_t3
-from sd_copy.dcim_transfer import get_camera, get_metadata, get_sanitized_file_name, is_media_file
+from sd_copy.cameras import dji_osmo_action_photo_camera, dji_osmo_action_video_camera, fujifilm_x_t3, obs
+from sd_copy.dcim_transfer import get_camera, get_exif_date, get_metadata, get_sanitized_file_name, is_media_file
 from sd_copy.utils import UnexpectedDataError
 
 
@@ -20,6 +21,9 @@ class TestGetCamera(TestCase):
     def test_get_camera_dji_osmo_action_photo_camera(self):
         self.assertEqual(get_camera({"QuickTime:HandlerDescription": "DJI Osmo Action"}), dji_osmo_action_photo_camera)
 
+    def test_get_camera_obs(self):
+        self.assertEqual(get_camera({"File:MIMEType": "video/x-matroska"}), obs)
+
 
 class TestIsMediaFile(TestCase):
     def test_is_media_file_returns_false_for_dji_hidden_files(self):
@@ -30,6 +34,30 @@ class TestGetSanitizedFileName(TestCase):
     def test_get_sanitized_file_name_for_known_cases(self):
         self.assertEqual("DJI0375", get_sanitized_file_name(Path("dcim/100MEDIA/DJI_0375.MOV")))
         self.assertEqual("DJI0013-001", get_sanitized_file_name(Path("dcim/100MEDIA/DJI_0013_001.MP4")))
+
+    @patch("sd_copy.dcim_transfer.get_numeric_hash", return_value="1234")
+    def test_get_sanitized_file_name_for_obs(self, mock_get_numeric_hash):
+        test_path = Path("2026-08-09_18-02-42.mkv")
+        self.assertEqual("O1234", get_sanitized_file_name(test_path, camera=obs))
+        mock_get_numeric_hash.assert_called_once_with(test_path)
+
+
+class TestGetExifDate(TestCase):
+    def test_get_exif_date_uses_exif_field_by_default(self):
+        self.assertEqual(
+            datetime(2021, 7, 8, 17, 36, 28),
+            get_exif_date(
+                camera=fujifilm_x_t3,
+                exif_data={"EXIF:DateTimeOriginal": "2021:07:08 17:36:28"},
+                media_file=Path("DSCF0226.JPG"),
+            ),
+        )
+
+    def test_get_exif_date_uses_file_name_when_configured(self):
+        self.assertEqual(
+            datetime(2026, 8, 9, 18, 2, 42),
+            get_exif_date(camera=obs, exif_data={}, media_file=Path("2026-08-09_18-02-42.mkv")),
+        )
 
 
 class TestGetMetadata(TestCase):

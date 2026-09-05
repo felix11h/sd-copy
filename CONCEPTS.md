@@ -32,6 +32,12 @@ The naive timestamps found in the EXIF metadata (as parsed by Exiftool) are part
 
 <br>
 
+### OBS
+
+OBS `.mkv` recordings don't carry a reliably embedded creation timestamp in the metadata parsed by Exiftool. However, OBS's default file name (e.g. `2026-08-09_18-02-42.mkv`) has a naive local recording start time, so `sd-copy` simply uses this timestamp.
+
+<br>
+
 ### Fujifilm X-T3
 
 The Fujifilm X-T3 camera was released in 2018. Only with firmware version 5.00, from May 2023, support for setting the camera's time zone was added ([fujifilm-x.com](https://fujifilm-x.com/en-gb/support/download/firmware/cameras/x-t3/)). With this, full support for time zone aware timestamps is possible, however, it is at the moment not implemented (see https://github.com/felix11h/sd-copy/issues/26).

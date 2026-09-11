@@ -105,7 +105,7 @@ def get_metadata(media_file: Path) -> dict:
 
 def get_sanitized_file_name(path: Path, camera: Optional[Camera] = None) -> str:
     return (
-        f"O{get_numeric_hash(path)}"
+        f"B{get_numeric_hash(path)}"
         if camera and camera.filename_date_format
         else path.stem.replace("_", "", 1).replace("_", "-")
     )

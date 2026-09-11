@@ -1,7 +1,8 @@
 
-Sd-copy is a command line tool for copying DCIM files from an SD card and sorting them into a target folder according to metadata. The following cameras are currently supported:
+Sd-copy is a command line tool for copying DCIM files from an SD card and sorting them into a target folder according to metadata. The following cameras and tools are currently supported:
 * Fujifilm X-T3
 * DJI Osmo Action
+* OBS
 
 
 ## Usage
@@ -19,7 +20,8 @@ a DCIM folder structure in `[source path]` such as
 ├── DSCF0230.MOV
 ├── DSCF0231.JPG
 ├── DSCF0231.RAF
-└── DSCF0232.MOV
+├── DSCF0232.MOV
+└── 2021-07-09_18-02-42.mkv
 ```
 is copied to `[target path]` with the following structure
 ````shell
@@ -32,6 +34,8 @@ out/
 │   ├── 20210708-174028_x-t3_DSCF0231_4416x2944.raf
 │   ├── 20210708-174028_x-t3_DSCF0231_6240x4160.jpg
 │   └── 20210708-174626_x-t3_DSCF0232_1080p-24fps.mov
+├── 2021-07-09
+│   └── 20210709-180242_obs_B7451_1080p-60fps.mkv
 └── 2021-07-12
     └── 20210712-075107_dji-oa_DJI0163_2160p-29.97fps.mov
 

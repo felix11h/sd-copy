@@ -57,3 +57,7 @@ def get_checksum(file: Path, skip: bool = False) -> Optional[str]:
         while chunk := f.read(CHUNK_SIZE):
             checksum.update(chunk)
     return checksum.hexdigest()
+
+
+def get_numeric_hash(file: Path, digits: int = 4) -> str:
+    return str(int(get_checksum(file=file), 16) % 10**digits).zfill(digits)

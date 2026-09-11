@@ -9,9 +9,9 @@ from enum import StrEnum
 from pathlib import Path
 from typing import Any, Optional, Sequence, Union
 
-from sd_copy.cameras import Camera, dji_osmo_action_photo_camera, dji_osmo_action_video_camera, fujifilm_x_t3
+from sd_copy.cameras import Camera, dji_osmo_action_photo_camera, dji_osmo_action_video_camera, fujifilm_x_t3, obs
 from sd_copy.files import is_media_file
-from sd_copy.utils import UnexpectedDataError, get_datetime_from_str, get_single_value
+from sd_copy.utils import UnexpectedDataError, get_datetime_from_str, get_numeric_hash, get_single_value
 
 
 class Extension(StrEnum):
@@ -21,6 +21,7 @@ class Extension(StrEnum):
     raf = ".raf"
     dng = ".dng"
     aac = ".aac"
+    mkv = ".mkv"
 
 
 @dataclass
@@ -58,9 +59,13 @@ class DCIMTransfer:
 
 
 def get_camera(exif_data: dict) -> Camera:
+    # OBS recordings don't carry an EXIF:Model or QuickTime:HandlerDescription field, so identify by MIMEType
+    if exif_data.get("File:MIMEType") == "video/x-matroska":
+        return obs
+
     camera_identifier = exif_data.get("EXIF:Model") or exif_data.get("QuickTime:HandlerDescription")
     if not camera_identifier:
-        raise UnexpectedDataError("EXIF data does not match X-T3 or Osmo Action known outputs")
+        raise UnexpectedDataError("EXIF data does not match X-T3, Osmo Action or OBS known outputs")
     return {
         "X-T3": fujifilm_x_t3,
         "\u0010DJI.Meta": dji_osmo_action_video_camera,  # used in case of videos
@@ -98,17 +103,28 @@ def get_metadata(media_file: Path) -> dict:
     )
 
 
-def get_sanitized_file_name(path: Path) -> str:
-    return path.stem.replace("_", "", 1).replace("_", "-")
+def get_sanitized_file_name(path: Path, camera: Optional[Camera] = None) -> str:
+    return (
+        f"O{get_numeric_hash(path)}"
+        if camera and camera.filename_date_format
+        else path.stem.replace("_", "", 1).replace("_", "-")
+    )
+
+
+def get_exif_date(camera: Camera, exif_data: dict, media_file: Path) -> datetime:
+    if camera.filename_date_format:
+        return datetime.strptime(media_file.stem, camera.filename_date_format)
+    return get_datetime_from_str(exif_data[camera.exif_date_field])
 
 
 def get_image_or_video(media_file: Path) -> Union[Image, Video]:
     exif_data = get_metadata(media_file=media_file)
+    camera = get_camera(exif_data)
 
     base_medium = BaseMedium(
         file_modify_date=datetime.strptime(exif_data["File:FileModifyDate"], "%Y:%m:%d %H:%M:%S%z"),
-        camera=get_camera(exif_data),
-        file_name=get_sanitized_file_name(path=media_file),
+        camera=camera,
+        file_name=get_sanitized_file_name(path=media_file, camera=camera),
         extension=Extension(media_file.suffix.lower()),
         mime_type=exif_data["File:MIMEType"],
     )
@@ -116,21 +132,28 @@ def get_image_or_video(media_file: Path) -> Union[Image, Video]:
     if base_medium.mime_type in ("video/quicktime", "video/mp4"):
         metadata = Video(
             **base_medium.asdict_shallow(),
-            exif_date=get_datetime_from_str(exif_data[base_medium.camera.exif_date_field]),
+            exif_date=get_exif_date(camera=base_medium.camera, exif_data=exif_data, media_file=media_file),
             resolution=f"{exif_data['QuickTime:ImageHeight']}p",
             fps=f"{round(exif_data['QuickTime:VideoFrameRate'], 2)}fps",
+        )
+    elif base_medium.mime_type in ("video/x-matroska",):
+        metadata = Video(
+            **base_medium.asdict_shallow(),
+            exif_date=get_exif_date(camera=base_medium.camera, exif_data=exif_data, media_file=media_file),
+            resolution=f"{exif_data['Matroska:ImageHeight']}p",
+            fps=f"{round(exif_data['Matroska:VideoFrameRate'], 2)}fps",
         )
     elif base_medium.mime_type in ("image/jpeg", "image/x-fujifilm-raf"):
         metadata = Image(
             **base_medium.asdict_shallow(),
-            exif_date=get_datetime_from_str(exif_data[base_medium.camera.exif_date_field]),
+            exif_date=get_exif_date(camera=base_medium.camera, exif_data=exif_data, media_file=media_file),
             resolution=f"{exif_data['EXIF:ExifImageWidth']}x{exif_data['EXIF:ExifImageHeight']}",
             shutter_speed=str(exif_data["EXIF:ShutterSpeedValue"]).replace("/", "-"),
         )
     elif base_medium.mime_type in ("image/x-adobe-dng",):
         metadata = Image(
             **base_medium.asdict_shallow(),
-            exif_date=get_datetime_from_str(exif_data[base_medium.camera.exif_date_field]),
+            exif_date=get_exif_date(camera=base_medium.camera, exif_data=exif_data, media_file=media_file),
             resolution=f"{exif_data['EXIF:ImageWidth']}x{exif_data['EXIF:ImageHeight']}",
             shutter_speed=str(exif_data["EXIF:ShutterSpeedValue"]).replace("/", "-"),
         )
@@ -178,6 +201,7 @@ def get_target_path(
                             "image/x-adobe-dng": get_image_file_name_additions,
                             "video/quicktime": get_video_file_name_additions,
                             "video/mp4": get_video_file_name_additions,
+                            "video/x-matroska": get_video_file_name_additions,
                         }[metadata.mime_type](metadata)
                     ),
                 ),

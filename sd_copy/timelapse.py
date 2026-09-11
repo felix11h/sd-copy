@@ -4,6 +4,7 @@ from datetime import datetime
 from enum import StrEnum, auto
 from operator import attrgetter
 from pathlib import Path
+from statistics import mean
 from typing import Optional, Sequence
 
 import click
@@ -95,12 +96,16 @@ def compute_timedelta(sorted_dcim_transfers: Sequence) -> int:
 
     if (max(timedeltas) - min(timedeltas)) > TIMEDELTA_THRESHOLD:
         raise UnexpectedDataError(
-            "Images interval unexpected, timelapse might need to be split up:"
-            "\n\t".join(
+            "Images interval unexpected, timelapse might need to be split up:\n  "
+            + "\n  ".join(
                 tuple(
-                    f"{next_image.source_path.name} -> {image.source_path.name}: " f"dt={dt_seconds}s"
+                    f"{next_image.source_path.name} -> {image.source_path.name}: "
+                    f"dt={dt_seconds}s (expected {expected_interval})"
                     for next_image, image in zip(sorted_dcim_transfers[1:], sorted_dcim_transfers[:-1])
-                    if (dt_seconds := (next_image.rectified_modify_date - image.rectified_modify_date).total_seconds())
+                    if abs(
+                        (dt_seconds := (next_image.rectified_modify_date - image.rectified_modify_date).total_seconds())
+                        - (expected_interval := mean(timedeltas)),
+                    )
                     > TIMEDELTA_THRESHOLD
                 ),
             ),

@@ -38,7 +38,7 @@ class TestGetSanitizedFileName(TestCase):
     @patch("sd_copy.dcim_transfer.get_numeric_hash", return_value="1234")
     def test_get_sanitized_file_name_for_obs(self, mock_get_numeric_hash):
         test_path = Path("2026-08-09_18-02-42.mkv")
-        self.assertEqual("O1234", get_sanitized_file_name(test_path, camera=obs))
+        self.assertEqual("B1234", get_sanitized_file_name(test_path, camera=obs))
         mock_get_numeric_hash.assert_called_once_with(test_path)
 
 

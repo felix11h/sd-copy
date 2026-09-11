@@ -17,7 +17,7 @@ class RenameOperation:
 
 
 def is_media_file(file: Path) -> bool:
-    if file.stem.startswith("._"):
+    if file.stem.startswith("._") or file.stem == ".DS_Store":
         logging.warning(f"Found non-media file {file.name}, skipping.")
         return False
     if file.is_dir():
